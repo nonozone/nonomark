@@ -64,4 +64,10 @@ describe('NonoEditor integration', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(uploadImages).toHaveBeenCalledTimes(1);
   });
+
+  it('renders embedded images only when explicitly enabled', async () => {
+    const source = '![pixel](data:image/png;base64,iVBORw0KGgo=)';
+    const wrapper = await mountEditor({ modelValue: source, allowBase64Images: true });
+    expect(wrapper.find('img').attributes('src')).toBe('data:image/png;base64,iVBORw0KGgo=');
+  });
 });

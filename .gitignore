@@ -1,5 +1,6 @@
 node_modules/
 dist/
+playground-dist/
 .flowlatch/
 *.tgz
 .DS_Store

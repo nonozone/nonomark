@@ -41,11 +41,13 @@
   ],
   "scripts": {
     "build": "vite build",
+    "playground": "vite --config vite.playground.config.js --host 127.0.0.1 --port 4173",
+    "build:playground": "vite build --config vite.playground.config.js",
     "test": "npm run test:unit && npm run test:component",
-    "test:unit": "node --test test/editor.test.mjs",
+    "test:unit": "node --test test/*.test.mjs",
     "test:component": "vitest run test/component.test.js",
     "typecheck": "tsc -p tsconfig.json",
-    "check": "npm test && npm run typecheck && npm run build",
+    "check": "npm test && npm run typecheck && npm run build && npm run build:playground",
     "prepack": "npm run check"
   },
   "dependencies": {

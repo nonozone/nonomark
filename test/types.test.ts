@@ -9,6 +9,7 @@ const props: NonoEditorProps = {
   modelValue: '# Typed',
   readonly: true,
   autofocus: false,
+  allowBase64Images: true,
   uploadImages: async (files, onProgress) => {
     onProgress({ file: files[0], progress: 100 });
     return [{ url: 'https://example.com/image.png' }];

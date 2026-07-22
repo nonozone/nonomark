@@ -9,3 +9,4 @@ All notable changes to this package are documented here. The project follows sem
 - Add inline link editing and paste/drop image uploads.
 - Prevent concurrent upload batches.
 - Add component integration tests, expanded Markdown round-trip tests and CI.
+- Add a distraction-free local Playground with optional embedded data-URL images.

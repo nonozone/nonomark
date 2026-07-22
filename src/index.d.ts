@@ -14,6 +14,7 @@ export interface NonoEditorProps {
   disabled?: boolean;
   readonly?: boolean;
   autofocus?: boolean;
+  allowBase64Images?: boolean;
   locale?: string;
   uploadImages?: UploadImages | null;
   imageAccept?: string;
