@@ -1,4 +1,4 @@
-# NonoMark
+# nonoMark
 
 [![CI](https://github.com/nonozone/nonomark/actions/workflows/ci.yml/badge.svg)](https://github.com/nonozone/nonomark/actions/workflows/ci.yml)
 
