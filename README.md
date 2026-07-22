@@ -4,6 +4,8 @@
 
 A lightweight, dependable Vue 3 visual Markdown editor built with official Tiptap packages. Markdown remains the `v-model` contract; storage, authentication and autosave stay in the host application.
 
+Try the distraction-free editor at [nonozone.github.io/nonomark](https://nonozone.github.io/nonomark/).
+
 ## Install
 
 ```bash
@@ -35,6 +37,7 @@ const content = ref('## Hello');
 | `disabled` | `boolean` | `false` | Disable editing and mode changes |
 | `readonly` | `boolean` | `false` | Prevent edits while allowing source inspection |
 | `autofocus` | `boolean` | `false` | Focus the visual editor after mounting |
+| `allowBase64Images` | `boolean` | `false` | Allow embedded data-URL images; intended for local/offline documents |
 | `locale` | `string` | `'en'` | Built-in English or `zh-*` interface copy |
 | `help` | `string` | `''` | Help text below the editor |
 | `uploadImages` | `UploadImages \| null` | `null` | Host-provided image upload function |
@@ -96,6 +99,20 @@ npm run typecheck
 npm run build
 npm pack --dry-run --ignore-scripts
 ```
+
+### Playground
+
+Public demo: [https://nonozone.github.io/nonomark/](https://nonozone.github.io/nonomark/)
+
+Run the local-first writing workspace at `http://127.0.0.1:4173`:
+
+```bash
+npm run playground
+```
+
+The Playground is a distraction-free, full-screen editor. It automatically saves one Markdown document to browser storage and embeds uploaded images directly into Markdown as data URLs, so it needs no backend and does not upload content. Demo images are limited to 1 MiB each because browser storage is intentionally small.
+
+Create its static production build with `npm run build:playground`. Output is written to `playground-dist/` and is ready for a later GitHub Pages deployment.
 
 The generated editor wrapper is small, but Tiptap packages are externalized from the library build. Measure the final host application bundle when evaluating total browser weight.
 
