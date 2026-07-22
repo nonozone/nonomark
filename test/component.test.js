@@ -70,4 +70,16 @@ describe('NonoEditor integration', () => {
     const wrapper = await mountEditor({ modelValue: source, allowBase64Images: true });
     expect(wrapper.find('img').attributes('src')).toBe('data:image/png;base64,iVBORw0KGgo=');
   });
+
+  it('keeps formatting tools usable in Markdown source mode', async () => {
+    const wrapper = await mountEditor({ modelValue: '- [ ] protected' });
+    const source = wrapper.find('textarea.nono-rich-editor__source');
+    source.element.setSelectionRange(6, 15);
+
+    await wrapper.find('button[title="Bold"]').trigger('click');
+
+    expect(wrapper.emitted('update:modelValue').at(-1)).toEqual(['- [ ] **protected**']);
+    expect(wrapper.find('button[title="Italic"]').exists()).toBe(true);
+    expect(wrapper.find('input[type="file"]').exists()).toBe(false);
+  });
 });

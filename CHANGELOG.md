@@ -10,3 +10,4 @@ All notable changes to this package are documented here. The project follows sem
 - Prevent concurrent upload batches.
 - Add component integration tests, expanded Markdown round-trip tests and CI.
 - Add a distraction-free local Playground with optional embedded data-URL images.
+- Keep formatting, links, tables and image tools available in Markdown source mode.
