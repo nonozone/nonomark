@@ -1,0 +1,93 @@
+<template>
+  <div class="nono-rich-editor" :class="{ 'nono-rich-editor--fill': fill, 'is-disabled': disabled, 'is-readonly': readonly }">
+    <div class="nono-rich-editor__shell" :class="{ 'is-focused': focused }">
+      <div v-if="editor" class="nono-rich-editor__toolbar" role="toolbar" :aria-label="tr('Formatting tools', '格式工具')">
+        <div v-if="!sourceMode" class="nono-rich-editor__group">
+          <button type="button" class="nono-rich-editor__button" :disabled="!editable || !canUndo" :title="tr('Undo', '撤销')" @click="command('undo')">↶ <span>{{ tr('Undo', '撤销') }}</span></button>
+          <button type="button" class="nono-rich-editor__button" :disabled="!editable || !canRedo" :title="tr('Redo', '重做')" @click="command('redo')">↷ <span>{{ tr('Redo', '重做') }}</span></button>
+        </div>
+        <div v-if="!sourceMode" class="nono-rich-editor__group">
+          <select class="nono-rich-editor__select" :disabled="!editable" :aria-label="tr('Text style', '文字样式')" :value="activeBlock" @change="setBlock">
+            <option value="paragraph">{{ tr('Paragraph', '正文') }}</option><option value="heading-2">{{ tr('Heading 2', '标题 2') }}</option><option value="heading-3">{{ tr('Heading 3', '标题 3') }}</option><option value="heading-4">{{ tr('Heading 4', '标题 4') }}</option>
+          </select>
+        </div>
+        <div v-if="!sourceMode" class="nono-rich-editor__group">
+          <button type="button" class="nono-rich-editor__icon is-bold" :disabled="!editable" :class="{ 'is-active': active('bold') }" :title="tr('Bold', '粗体')" @click="toggleMark('bold')">B</button>
+          <button type="button" class="nono-rich-editor__icon is-italic" :disabled="!editable" :class="{ 'is-active': active('italic') }" :title="tr('Italic', '斜体')" @click="toggleMark('italic')">I</button>
+          <button type="button" class="nono-rich-editor__icon is-strike" :disabled="!editable" :class="{ 'is-active': active('strike') }" :title="tr('Strikethrough', '删除线')" @click="toggleMark('strike')">S</button>
+        </div>
+        <div v-if="!sourceMode" class="nono-rich-editor__group nono-rich-editor__group--menu">
+          <details ref="tableMenu" class="nono-rich-editor__table-menu">
+            <summary class="nono-rich-editor__button" :class="{ 'is-active': active('table') }">▦ <span>{{ tr('Table', '表格') }}</span>⌄</summary>
+            <div class="nono-rich-editor__table-panel" role="menu" :aria-label="tr('Table tools', '表格工具')">
+              <button type="button" class="nono-rich-editor__table-action is-wide" :disabled="!editable || active('table')" @click="insertTable">▦ {{ tr('Insert 3 × 3 table', '插入 3 × 3 表格') }}</button>
+              <div class="nono-rich-editor__divider"></div>
+              <div class="nono-rich-editor__table-grid">
+                <button type="button" class="nono-rich-editor__table-action" :disabled="!editable || !active('table')" @click="tableCommand('addRowAfter')">＋ {{ tr('Add row', '增加行') }}</button><button type="button" class="nono-rich-editor__table-action" :disabled="!editable || !active('table')" @click="tableCommand('deleteRow')">－ {{ tr('Delete row', '删除行') }}</button>
+                <button type="button" class="nono-rich-editor__table-action" :disabled="!editable || !active('table')" @click="tableCommand('addColumnAfter')">＋ {{ tr('Add column', '增加列') }}</button><button type="button" class="nono-rich-editor__table-action" :disabled="!editable || !active('table')" @click="tableCommand('deleteColumn')">－ {{ tr('Delete column', '删除列') }}</button>
+              </div>
+              <button type="button" class="nono-rich-editor__table-action is-wide is-danger" :disabled="!editable || !active('table')" @click="tableCommand('deleteTable')">× {{ tr('Delete table', '删除整个表格') }}</button>
+            </div>
+          </details>
+        </div>
+        <div v-if="!sourceMode" class="nono-rich-editor__group">
+          <button type="button" class="nono-rich-editor__icon" :disabled="!editable" :class="{ 'is-active': active('bulletList') }" :title="tr('Bullet list', '项目列表')" @click="command('toggleBulletList')">•</button><button type="button" class="nono-rich-editor__icon is-small" :disabled="!editable" :class="{ 'is-active': active('orderedList') }" :title="tr('Numbered list', '编号列表')" @click="command('toggleOrderedList')">1.</button><button type="button" class="nono-rich-editor__icon" :disabled="!editable" :class="{ 'is-active': active('blockquote') }" :title="tr('Quote', '引用')" @click="command('toggleBlockquote')">“</button><button type="button" class="nono-rich-editor__icon is-code" :disabled="!editable" :class="{ 'is-active': active('code') }" :title="tr('Inline code', '行内代码')" @click="toggleMark('code')">&lt;/&gt;</button>
+        </div>
+        <div v-if="!sourceMode" class="nono-rich-editor__group nono-rich-editor__group--menu">
+          <button type="button" class="nono-rich-editor__button" :disabled="!editable" :class="{ 'is-active': active('link') || linkOpen }" @click="editLink">↗ <span>{{ tr('Link', '链接') }}</span></button>
+          <div v-if="linkOpen" ref="linkPanel" class="nono-rich-editor__link-panel" @keydown.esc="closeLink">
+            <label><span>{{ tr('Link URL', '链接地址') }}</span><input ref="linkInput" v-model="linkDraft" :aria-label="tr('Link URL', '链接地址')" type="url" placeholder="https://" @keydown.enter.prevent="applyLink"></label>
+            <div><button type="button" @click="applyLink">{{ tr('Apply', '应用') }}</button><button type="button" class="is-danger" @click="removeLink">{{ tr('Remove', '移除') }}</button></div>
+          </div>
+          <label v-if="uploadImages" class="nono-rich-editor__button nono-rich-editor__upload" :class="{ 'is-disabled': uploading || !editable }">↑ <span>{{ uploading ? uploadButtonText : tr('Upload', '上传') }}</span><input type="file" :accept="imageAccept" :disabled="uploading || !editable" multiple @change="handleUpload"></label>
+        </div>
+        <div class="nono-rich-editor__group"><button type="button" class="nono-rich-editor__button" :disabled="disabled" :class="{ 'is-active': sourceMode }" :aria-pressed="sourceMode" @click="toggleSource">MD <span>{{ sourceMode ? tr('Visual', '可视化') : tr('Source', '源码') }}</span></button></div>
+      </div>
+      <div v-if="protectedMarkdownFeatures.length" class="nono-rich-editor__notice" role="status">{{ sourceProtectionNotice }}</div>
+      <div v-if="uploadStatus" class="nono-rich-editor__upload-status"><div><strong>{{ uploadStatus.name }}</strong><span :class="`is-${uploadStatus.status}`">{{ uploadStatusText }}</span></div><div class="nono-rich-editor__progress"><i :class="`is-${uploadStatus.status}`" :style="{ width: `${uploadStatus.progress}%` }"></i></div><p v-if="uploadStatus.error">{{ uploadStatus.error }}</p></div>
+      <div v-if="editorError" class="nono-rich-editor__fallback"><textarea :value="modelValue" :disabled="disabled" :readonly="readonly" :placeholder="placeholder" @input="emit('update:modelValue', $event.target.value)"></textarea><p>{{ editorError }}</p></div>
+      <textarea v-else-if="sourceMode" :value="sourceValue" :disabled="disabled" :readonly="readonly" :placeholder="placeholder" class="nono-rich-editor__source" :style="{ '--nono-editor-min-height': minHeight }" spellcheck="false" @input="publish($event.target.value)" @focus="focused = true" @blur="focused = false"></textarea>
+      <EditorContent v-else :editor="editor" class="nono-rich-editor__content" :style="{ '--nono-editor-min-height': minHeight }" />
+      <div v-if="editor && !editorError" class="nono-rich-editor__footer"><span>{{ tr('{count} characters', '{count} 个字符', { count: characterCount }) }}</span><span>{{ sourceMode ? tr('Markdown source', 'Markdown 源码') : tr('Markdown compatible', '兼容 Markdown') }}</span></div>
+    </div>
+    <p v-if="help" class="nono-rich-editor__help">{{ help }}</p>
+  </div>
+</template>
+
+<script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { Editor, EditorContent } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
+import { TableKit } from '@tiptap/extension-table';
+import { Markdown } from '@tiptap/markdown';
+import { Placeholder } from '@tiptap/extensions';
+import { findUnsupportedMarkdown, requiresSourceMode } from './markdownCompatibility.js';
+
+const DEFAULT_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml';
+const props = defineProps({ modelValue: { type: String, default: '' }, placeholder: { type: String, default: '' }, rows: { type: Number, default: 10 }, help: { type: String, default: '' }, fill: { type: Boolean, default: false }, disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, autofocus: { type: Boolean, default: false }, locale: { type: String, default: 'en' }, uploadImages: { type: Function, default: null }, imageAccept: { type: String, default: DEFAULT_IMAGE_ACCEPT }, maxImageSize: { type: Number, default: 10 * 1024 * 1024 } });
+const emit = defineEmits(['update:modelValue', 'warning', 'upload-complete', 'upload-error']);
+const tr = (en, zh, vars) => { let text = /^zh(?:-|$)/i.test(props.locale) ? (zh || en) : en; return vars ? text.replace(/\{(\w+)\}/g, (_m, key) => vars[key] == null ? '' : String(vars[key])) : text; };
+const editor = shallowRef(null); const editorError = ref(''); const focused = ref(false); const tick = ref(0); const lastValue = ref(null); const sourceMode = ref(false); const sourceValue = ref(props.modelValue || ''); const tableMenu = ref(null); const uploadStatus = ref(null); const linkOpen = ref(false); const linkDraft = ref(''); const linkPanel = ref(null); const linkInput = ref(null);
+const editable = computed(() => !props.disabled && !props.readonly); const uploading = computed(() => uploadStatus.value?.status === 'uploading'); const protectedMarkdownFeatures = computed(() => sourceMode.value ? findUnsupportedMarkdown(sourceValue.value) : []); const minHeight = computed(() => props.fill ? '640px' : `${Math.max(420, props.rows * 32)}px`);
+const sourceProtectionNotice = computed(() => { const names = { 'task-list': tr('task lists', '任务列表'), frontmatter: 'frontmatter', footnote: tr('footnotes', '脚注'), 'raw-html': 'HTML' }; const features = protectedMarkdownFeatures.value.map((feature) => names[feature] || feature).join(', '); return tr('This content uses {features}. It stays in source mode to prevent formatting loss.', '此内容使用了 {features}。为避免格式丢失，已保留在源码模式。', { features }); });
+const characterCount = computed(() => { tick.value; return sourceMode.value ? sourceValue.value.length : (editor.value?.getText()?.length || 0); }); const canUndo = computed(() => { tick.value; return editor.value?.can().undo() || false; }); const canRedo = computed(() => { tick.value; return editor.value?.can().redo() || false; });
+const activeBlock = computed(() => { tick.value; for (const level of [2, 3, 4]) if (editor.value?.isActive('heading', { level })) return `heading-${level}`; return 'paragraph'; });
+const refresh = () => { tick.value += 1; }; const active = (name, attrs) => { tick.value; return editor.value?.isActive(name, attrs) || false; }; const command = (name) => { if (!editable.value) return; const chain = editor.value?.chain().focus(); if (chain && typeof chain[name] === 'function') chain[name]().run(); };
+const closeTable = () => { if (tableMenu.value) tableMenu.value.open = false; }; const tableCommand = (name) => { command(name); closeTable(); }; const insertTable = () => { if (editable.value) editor.value?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); closeTable(); }; const toggleMark = (name) => command(`toggle${name[0].toUpperCase()}${name.slice(1)}`);
+const setBlock = (event) => { if (!editable.value) return; const chain = editor.value?.chain().focus(); if (!chain) return; event.target.value === 'paragraph' ? chain.setParagraph().run() : chain.setHeading({ level: Number(event.target.value.split('-')[1]) }).run(); };
+const closeLink = () => { linkOpen.value = false; }; const editLink = () => { if (!editor.value || !editable.value) return; linkDraft.value = editor.value.getAttributes('link').href || ''; linkOpen.value = true; nextTick(() => { linkInput.value?.focus(); linkInput.value?.select(); }); }; const applyLink = () => { if (!editor.value || !editable.value) return; const chain = editor.value.chain().focus().extendMarkRange('link'); linkDraft.value.trim() ? chain.setLink({ href: linkDraft.value.trim() }).run() : chain.unsetLink().run(); closeLink(); }; const removeLink = () => { linkDraft.value = ''; applyLink(); };
+const publish = (markdown) => { sourceValue.value = markdown; lastValue.value = markdown; if (markdown !== props.modelValue) emit('update:modelValue', markdown); };
+const toggleSource = () => { if (!editor.value) return; if (!sourceMode.value) { sourceValue.value = editor.value.getMarkdown(); sourceMode.value = true; return; } if (requiresSourceMode(sourceValue.value)) { emit('warning', tr('Remove unsupported Markdown features before switching to visual editing.', '请先移除当前不支持的 Markdown 语法，再切换到可视化编辑。')); return; } editor.value.commands.setContent(sourceValue.value || '', { contentType: 'markdown', emitUpdate: false }); sourceMode.value = false; refresh(); editor.value.commands.focus(); };
+const uploadButtonText = computed(() => uploadStatus.value?.progress >= 95 ? tr('Processing...', '处理中...') : tr('Uploading... {progress}%', '上传中... {progress}%', { progress: uploadStatus.value?.progress || 0 })); const uploadStatusText = computed(() => uploadStatus.value?.status === 'uploading' ? `${uploadStatus.value.progress}%` : uploadStatus.value?.status === 'success' ? tr('Complete', '完成') : tr('Failed', '失败'));
+const validateImage = (file) => { const types = new Set(props.imageAccept.split(',').map((v) => v.trim())); if (!types.has(file.type) && !/\.(png|jpe?g|gif|webp|svg)$/i.test(file.name || '')) return tr('Unsupported image format.', '不支持该图片格式。'); if (file.size > props.maxImageSize) return tr('File exceeds the size limit.', '图片超过大小限制。'); return ''; };
+const progress = (value, file) => { const data = typeof value === 'number' ? { progress: value } : (value || {}); uploadStatus.value = { name: data.name || data.file?.name || file?.name || tr('Images', '图片'), progress: Math.max(0, Math.min(100, Number(data.progress) || 0)), status: data.status || 'uploading', error: '' }; };
+const insertImages = (images) => { const nodes = images.flatMap(({ url, alt }) => [{ type: 'image', attrs: { src: url, alt: alt || 'image' } }, { type: 'paragraph' }]); if (nodes.length) editor.value?.chain().focus().insertContent(nodes).run(); };
+const uploadFiles = async (files) => { if (!files.length || !props.uploadImages || !editable.value || uploading.value) return; const validFiles = []; for (const file of files) { const message = validateImage(file); if (message) { const error = new Error(message); uploadStatus.value = { name: file.name, progress: 0, status: 'error', error: message }; emit('upload-error', error); } else validFiles.push(file); } if (!validFiles.length) return; progress(0, validFiles[0]); try { const result = await props.uploadImages(validFiles, (value) => progress(value, validFiles[0])); const images = Array.isArray(result) ? result.filter((item) => item?.url) : []; if (!images.length) throw new Error(tr('The upload returned no image URLs.', '上传结果中没有可用的图片地址。')); insertImages(images); uploadStatus.value = { name: tr('{count} images', '{count} 张图片', { count: images.length }), progress: 100, status: 'success', error: '' }; emit('upload-complete', images); } catch (error) { uploadStatus.value = { name: uploadStatus.value?.name || validFiles[0].name, progress: uploadStatus.value?.progress || 0, status: 'error', error: error?.message || String(error) }; emit('upload-error', error); } };
+const handleUpload = async (event) => { const files = Array.from(event.target.files || []); event.target.value = ''; await uploadFiles(files); }; const handleEditorFiles = (files) => { const images = Array.from(files || []).filter((file) => file.type?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name || '')); if (!images.length || !props.uploadImages || !editable.value || uploading.value) return false; void uploadFiles(images); return true; };
+const outside = (event) => { if (tableMenu.value?.open && !tableMenu.value.contains(event.target)) closeTable(); if (linkOpen.value && !linkPanel.value?.contains(event.target)) closeLink(); };
+watch(() => props.modelValue, (value) => { if (value !== lastValue.value) sourceValue.value = value || ''; if (!editor.value || value === lastValue.value) return; if (requiresSourceMode(value)) { sourceMode.value = true; return; } if (!sourceMode.value) editor.value.commands.setContent(value || '', { contentType: 'markdown', emitUpdate: false }); refresh(); });
+watch(editable, (value) => editor.value?.setEditable(value));
+onMounted(() => { document.addEventListener('pointerdown', outside); try { sourceMode.value = requiresSourceMode(props.modelValue); editor.value = new Editor({ editable: editable.value, extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }), Image.configure({ allowBase64: false }), TableKit, Placeholder.configure({ placeholder: props.placeholder || tr('Start writing...', '开始输入正文…') }), Markdown], content: props.modelValue || '', contentType: 'markdown', editorProps: { attributes: { class: 'nono-rich-editor__prosemirror', 'aria-label': props.placeholder || tr('Rich text editor', '富文本编辑器') }, handlePaste: (_view, event) => handleEditorFiles(event.clipboardData?.files), handleDrop: (_view, event) => handleEditorFiles(event.dataTransfer?.files) }, onUpdate: ({ editor: instance }) => { publish(instance.getMarkdown()); refresh(); }, onSelectionUpdate: refresh, onFocus: () => { focused.value = true; }, onBlur: () => { focused.value = false; } }); if (props.autofocus && !props.disabled) nextTick(() => editor.value?.commands.focus()); } catch (error) { editorError.value = tr('The rich text editor could not start.', '富文本编辑器未能启动。'); console.error('Failed to initialize editor', error); } });
+onBeforeUnmount(() => { document.removeEventListener('pointerdown', outside); editor.value?.destroy(); editor.value = null; });
+</script>
