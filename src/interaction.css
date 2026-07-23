@@ -16,6 +16,7 @@
 .nono-rich-editor__link-panel > div { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
 .nono-rich-editor__link-panel button { min-height: 32px; border: 1px solid var(--nono-editor-border); border-radius: 6px; background: #fff; padding: 0 10px; color: var(--nono-editor-text); cursor: pointer; }
 .nono-rich-editor__link-panel button.is-danger { color: #dc2626; }
+.nono-rich-editor__footer-meta { display: inline-flex; min-width: 0; align-items: center; gap: 12px; }
 .nono-rich-editor.is-readonly .nono-rich-editor__content,
 .nono-rich-editor.is-disabled .nono-rich-editor__content,
 .nono-rich-editor textarea:read-only,

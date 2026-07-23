@@ -45,7 +45,7 @@
     "build:playground": "vite build --config vite.playground.config.js",
     "test": "npm run test:unit && npm run test:component",
     "test:unit": "node --test test/*.test.mjs",
-    "test:component": "vitest run test/component.test.js",
+    "test:component": "vitest run test/*.test.js",
     "typecheck": "tsc -p tsconfig.json",
     "check": "npm test && npm run typecheck && npm run build && npm run build:playground",
     "prepack": "npm run check"

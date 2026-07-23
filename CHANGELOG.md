@@ -11,3 +11,5 @@ All notable changes to this package are documented here. The project follows sem
 - Add component integration tests, expanded Markdown round-trip tests and CI.
 - Add a distraction-free local Playground with optional embedded data-URL images.
 - Keep formatting, links, tables and image tools available in Markdown source mode.
+- Add Markdown import/export, guarded new-document actions, autosave status, recoverable snapshots and storage-capacity warnings to the Playground.
+- Add `toolbar-end` and `footer-status` host integration slots.

@@ -1,7 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_MARKDOWN, STORAGE_KEY, clearDocument, loadDocument, saveDocument } from '../playground/storage.js';
+import {
+  DEFAULT_MARKDOWN,
+  SNAPSHOTS_KEY,
+  STORAGE_KEY,
+  clearDocument,
+  getStorageHealth,
+  loadDocument,
+  loadSnapshots,
+  saveDocument,
+  saveSnapshot,
+  shouldCreateSnapshot,
+} from '../playground/storage.js';
 import { embedImages } from '../playground/images.js';
+import { createMarkdownExport, readMarkdownFile } from '../playground/files.js';
 
 const makeStorage = (initial = {}) => {
   const values = new Map(Object.entries(initial));
@@ -9,6 +21,8 @@ const makeStorage = (initial = {}) => {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
     removeItem: (key) => values.delete(key),
+    key: (index) => [...values.keys()][index] ?? null,
+    get length() { return values.size; },
   };
 };
 
@@ -33,6 +47,62 @@ test('playground document can be cleared', () => {
   saveDocument(storage, 'temporary');
   clearDocument(storage);
   assert.equal(loadDocument(storage).content, DEFAULT_MARKDOWN);
+});
+
+test('playground keeps a deduplicated ring of recoverable snapshots', () => {
+  const storage = makeStorage();
+  saveSnapshot(storage, '# First', 100, { maxSnapshots: 2 });
+  saveSnapshot(storage, '# First', 200, { maxSnapshots: 2 });
+  saveSnapshot(storage, '# Second', 300, { maxSnapshots: 2 });
+  saveSnapshot(storage, '# Third', 400, { maxSnapshots: 2 });
+
+  assert.deepEqual(loadSnapshots(storage), [
+    { content: '# Third', updatedAt: 400 },
+    { content: '# Second', updatedAt: 300 },
+  ]);
+
+  storage.setItem(SNAPSHOTS_KEY, '{broken');
+  assert.deepEqual(loadSnapshots(storage), []);
+});
+
+test('playground snapshots only after content changes and enough time passes', () => {
+  const snapshots = [{ content: 'old', updatedAt: 1_000 }];
+  assert.equal(shouldCreateSnapshot(snapshots, 'old', 99_000), false);
+  assert.equal(shouldCreateSnapshot(snapshots, 'new', 10_000, 30_000), false);
+  assert.equal(shouldCreateSnapshot(snapshots, 'new', 31_000, 30_000), true);
+});
+
+test('playground warns before the projected document exhausts local storage', () => {
+  const storage = makeStorage();
+  saveDocument(storage, 'small', 1);
+
+  const healthy = getStorageHealth(storage, 'small', 4_096, 2);
+  const crowded = getStorageHealth(storage, 'x'.repeat(1_700), 4_096, 2);
+
+  assert.equal(healthy.level, 'ok');
+  assert.equal(crowded.level, 'warning');
+  assert.ok(crowded.projectedBytes > healthy.projectedBytes);
+});
+
+test('playground imports Markdown and creates a dated export', async () => {
+  const file = new File(['# Imported'], 'notes.md', { type: 'text/markdown' });
+  assert.equal(await readMarkdownFile(file), '# Imported');
+
+  const exported = createMarkdownExport('# Exported', new Date('2026-07-23T08:09:00'));
+  assert.equal(exported.filename, 'nonoMark-2026-07-23-0809.md');
+  assert.equal(exported.blob.type, 'text/markdown;charset=utf-8');
+  assert.equal(await exported.blob.text(), '# Exported');
+});
+
+test('playground rejects oversized or non-Markdown imports', async () => {
+  await assert.rejects(
+    readMarkdownFile(new File(['plain'], 'notes.txt', { type: 'text/plain' })),
+    /Markdown/,
+  );
+  await assert.rejects(
+    readMarkdownFile(new File(['12345'], 'large.md', { type: 'text/markdown' }), 4),
+    /too large/i,
+  );
 });
 
 test('playground embeds images as self-contained data URLs', async () => {

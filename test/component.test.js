@@ -4,8 +4,8 @@ import { nextTick } from 'vue';
 import NonoEditor from '../src/NonoEditor.vue';
 
 const mounted = [];
-const mountEditor = async (props = {}) => {
-  const wrapper = mount(NonoEditor, { props: { modelValue: '', ...props } });
+const mountEditor = async (props = {}, options = {}) => {
+  const wrapper = mount(NonoEditor, { ...options, props: { modelValue: '', ...props } });
   mounted.push(wrapper);
   await nextTick();
   return wrapper;
@@ -81,5 +81,17 @@ describe('NonoEditor integration', () => {
     expect(wrapper.emitted('update:modelValue').at(-1)).toEqual(['- [ ] **protected**']);
     expect(wrapper.find('button[title="Italic"]').exists()).toBe(true);
     expect(wrapper.find('input[type="file"]').exists()).toBe(false);
+  });
+
+  it('provides unobtrusive host slots for document tools and save state', async () => {
+    const wrapper = await mountEditor({}, {
+      slots: {
+        'toolbar-end': '<button class="host-file-menu">文件</button>',
+        'footer-status': '<span class="host-save-state">已保存</span>',
+      },
+    });
+
+    expect(wrapper.find('.nono-rich-editor__toolbar .host-file-menu').text()).toBe('文件');
+    expect(wrapper.find('.nono-rich-editor__footer .host-save-state').text()).toBe('已保存');
   });
 });

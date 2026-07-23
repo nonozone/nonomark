@@ -46,6 +46,8 @@ const content = ref('## Hello');
 
 Events: `update:modelValue`, `warning`, `upload-complete`, and `upload-error`.
 
+Named slots: `toolbar-end` adds host-specific actions to the end of the formatting toolbar, and `footer-status` adds a compact host status beside the Markdown mode indicator.
+
 ## Images
 
 Provide `uploadImages(files, onProgress)` and resolve to `{ url, alt }[]`. Selecting, pasting or dropping images uses the same function. Only one upload batch runs at a time.
@@ -111,6 +113,8 @@ npm run playground
 ```
 
 The Playground is a distraction-free, full-screen editor. It automatically saves one Markdown document to browser storage and embeds uploaded images directly into Markdown as data URLs, so it needs no backend and does not upload content. Demo images are limited to 1 MiB each because browser storage is intentionally small.
+
+The compact **File** menu can import and export `.md` files, start a guarded blank document, and restore recent deduplicated snapshots. Destructive actions snapshot the current document first. The footer reports saving failures and warns when the projected local storage use approaches a conservative 5 MiB budget; exporting Markdown remains the durable backup path.
 
 Create its static production build with `npm run build:playground`. Output is written to `playground-dist/` and is ready for a later GitHub Pages deployment.
 

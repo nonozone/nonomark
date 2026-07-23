@@ -42,13 +42,14 @@
           <label v-if="uploadImages" class="nono-rich-editor__button nono-rich-editor__upload" :class="{ 'is-disabled': uploading || !editable }">↑ <span>{{ uploading ? uploadButtonText : tr('Upload', '上传') }}</span><input type="file" :accept="imageAccept" :disabled="uploading || !editable" multiple @change="handleUpload"></label>
         </div>
         <div class="nono-rich-editor__group"><button type="button" class="nono-rich-editor__button" :disabled="disabled" :class="{ 'is-active': sourceMode }" :aria-pressed="sourceMode" @click="toggleSource">MD <span>{{ sourceMode ? tr('Visual', '可视化') : tr('Source', '源码') }}</span></button></div>
+        <slot name="toolbar-end"></slot>
       </div>
       <div v-if="protectedMarkdownFeatures.length" class="nono-rich-editor__notice" role="status">{{ sourceProtectionNotice }}</div>
       <div v-if="uploadStatus" class="nono-rich-editor__upload-status"><div><strong>{{ uploadStatus.name }}</strong><span :class="`is-${uploadStatus.status}`">{{ uploadStatusText }}</span></div><div class="nono-rich-editor__progress"><i :class="`is-${uploadStatus.status}`" :style="{ width: `${uploadStatus.progress}%` }"></i></div><p v-if="uploadStatus.error">{{ uploadStatus.error }}</p></div>
       <div v-if="editorError" class="nono-rich-editor__fallback"><textarea :value="modelValue" :disabled="disabled" :readonly="readonly" :placeholder="placeholder" @input="emit('update:modelValue', $event.target.value)"></textarea><p>{{ editorError }}</p></div>
       <textarea v-else-if="sourceMode" ref="sourceInput" :value="sourceValue" :disabled="disabled" :readonly="readonly" :placeholder="placeholder" class="nono-rich-editor__source" :style="{ '--nono-editor-min-height': minHeight }" spellcheck="false" @input="publish($event.target.value)" @focus="focused = true" @blur="focused = false"></textarea>
       <EditorContent v-else :editor="editor" class="nono-rich-editor__content" :style="{ '--nono-editor-min-height': minHeight }" />
-      <div v-if="editor && !editorError" class="nono-rich-editor__footer"><span>{{ tr('{count} characters', '{count} 个字符', { count: characterCount }) }}</span><span>{{ sourceMode ? tr('Markdown source', 'Markdown 源码') : tr('Markdown compatible', '兼容 Markdown') }}</span></div>
+      <div v-if="editor && !editorError" class="nono-rich-editor__footer"><span>{{ tr('{count} characters', '{count} 个字符', { count: characterCount }) }}</span><span class="nono-rich-editor__footer-meta"><slot name="footer-status"></slot><span>{{ sourceMode ? tr('Markdown source', 'Markdown 源码') : tr('Markdown compatible', '兼容 Markdown') }}</span></span></div>
     </div>
     <p v-if="help" class="nono-rich-editor__help">{{ help }}</p>
   </div>

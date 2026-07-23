@@ -16,10 +16,51 @@ body { min-height: 100dvh; overflow: hidden; background: #f4f1ea; }
 .editor-stage .nono-rich-editor__content .ProseMirror { min-height: 100%; }
 .editor-stage .nono-rich-editor__source { min-height: 0; flex: 1; resize: none; }
 .editor-stage .nono-rich-editor__footer { flex: 0 0 auto; }
+.playground-file-group { margin-left: auto; }
+.playground-file-menu { position: relative; }
+.playground-file-menu > summary { list-style: none; }
+.playground-file-menu > summary::-webkit-details-marker { display: none; }
+.playground-file-panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 25; width: 214px; border: 1px solid #d7d3ca; border-radius: 10px; background: #fff; padding: 6px; box-shadow: 0 16px 38px rgb(52 57 51 / 16%); }
+.playground-file-action { display: grid; min-height: 38px; width: 100%; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; border: 0; border-radius: 7px; background: transparent; padding: 0 9px; color: #34423b; cursor: pointer; font: inherit; font-size: 12px; font-weight: 620; text-align: left; }
+.playground-file-action:hover:not(:disabled) { background: #f2f4f1; color: #315f4f; }
+.playground-file-action:disabled { cursor: not-allowed; opacity: .38; }
+.playground-file-action.is-danger { color: #b3433d; }
+.playground-file-action small { min-width: 20px; border-radius: 99px; background: #eef2ef; padding: 2px 6px; color: #647169; font-size: 10px; text-align: center; }
+.playground-file-action input { display: none; }
+.playground-file-divider { height: 1px; margin: 5px 4px; background: #e3e5e1; }
+.playground-save-state { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.playground-save-state i { width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; }
+.playground-save-state.is-saving i { background: #c39038; }
+.playground-save-state.is-saved i { background: #3f8069; }
+.playground-save-state.is-warning { color: #a66c18; }
+.playground-save-state.is-warning i { background: #d39a3b; }
+.playground-save-state.is-error { color: #b3433d; }
+.playground-save-state.is-error i { background: #c94c44; }
 .save-error { position: fixed; right: 18px; bottom: 18px; z-index: 30; max-width: min(420px, calc(100vw - 36px)); margin: 0; border: 1px solid #efb8b3; border-radius: 9px; background: #fff4f2; padding: 10px 12px; color: #a93832; box-shadow: 0 12px 30px rgb(96 40 35 / 12%); font-size: 12px; }
+.recovery-dialog { width: min(560px, calc(100vw - 32px)); max-height: min(680px, calc(100dvh - 48px)); overflow: hidden; border: 1px solid #d7d3ca; border-radius: 14px; background: #fbfaf7; padding: 0; color: #29332e; box-shadow: 0 28px 80px rgb(35 43 39 / 24%); }
+.recovery-dialog::backdrop { background: rgb(29 37 33 / 32%); backdrop-filter: blur(3px); }
+.recovery-dialog header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2dfd7; padding: 16px 18px; }
+.recovery-dialog header div { display: grid; gap: 3px; }
+.recovery-dialog header strong { font-size: 15px; }
+.recovery-dialog header span { color: #78827c; font-size: 11px; }
+.recovery-dialog header button { width: 32px; height: 32px; border: 0; border-radius: 7px; background: transparent; color: #68736d; cursor: pointer; font-size: 20px; }
+.recovery-dialog header button:hover { background: #eef0ec; }
+.recovery-list { display: grid; max-height: min(520px, calc(100dvh - 190px)); gap: 7px; overflow-y: auto; padding: 12px; }
+.recovery-list > button { position: relative; display: grid; gap: 7px; border: 1px solid #e1dfd8; border-radius: 10px; background: #fff; padding: 12px 64px 12px 13px; color: inherit; cursor: pointer; text-align: left; }
+.recovery-list > button:hover:not(:disabled) { border-color: #91aa9f; background: #f8faf8; }
+.recovery-list > button:disabled { cursor: default; opacity: .62; }
+.recovery-list > button > span { display: flex; align-items: baseline; gap: 10px; }
+.recovery-list time { font-size: 12px; font-weight: 700; }
+.recovery-list small { color: #89918c; font-size: 10px; }
+.recovery-list p { overflow: hidden; margin: 0; color: #647069; font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.55; text-overflow: ellipsis; white-space: nowrap; }
+.recovery-list em { position: absolute; top: 50%; right: 13px; transform: translateY(-50%); color: #315f4f; font-size: 11px; font-style: normal; font-weight: 700; }
+.recovery-help { margin: 0; border-top: 1px solid #e2dfd7; padding: 11px 18px 13px; color: #7b847f; font-size: 11px; }
 
 @media (max-width: 720px) {
   .playground-shell { padding: 0; }
   .editor-stage { height: 100dvh; }
   .editor-stage .nono-rich-editor__shell { border: 0; border-radius: 0; box-shadow: none; }
+  .playground-file-group { margin-left: 0; }
+  .playground-file-panel { position: fixed; top: 58px; right: 8px; }
+  .editor-stage .nono-rich-editor__footer-meta { gap: 8px; }
 }
