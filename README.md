@@ -76,33 +76,30 @@ type UploadImages = (
 }>>
 ```
 
-Example using a host endpoint that returns a presigned S3-compatible upload request:
+For S3, Cloudflare R2, MinIO and other S3-compatible storage, import the optional adapter from its independent package entry. Your host endpoint returns a presigned PUT request; the adapter performs the upload with byte progress and cancellation support.
 
 ```js
-const uploadImages = async (files, { signal, onProgress }) => {
-  const assets = [];
-  let loaded = 0;
-  const total = files.reduce((sum, file) => sum + file.size, 0);
+import { createS3ImageUploader } from '@nonoim/editor/upload-s3';
 
-  for (const file of files) {
-    const signed = await fetch('/api/images/presign', {
+const uploadImages = createS3ImageUploader({
+  provider: 's3',
+  getUploadRequest: async (file, { signal }) => {
+    const response = await fetch('/api/images/presign', {
       method: 'POST',
+      credentials: 'include',
       signal,
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ name: file.name, type: file.type, size: file.size }),
-    }).then((response) => response.json());
-
-    await fetch(signed.uploadUrl, { method: 'PUT', body: file, signal });
-    loaded += file.size;
-    onProgress({ file, loaded, total, percentage: Math.round((loaded / total) * 100) });
-    assets.push({ url: signed.publicUrl, alt: file.name, provider: 's3', key: signed.key });
-  }
-
-  return assets;
-};
+    });
+    if (!response.ok) throw new Error(`Unable to prepare upload (${response.status}).`);
+    return response.json();
+  },
+});
 ```
 
-The editor creates one `AbortSignal` per batch and exposes a cancel action while uploading. Providers must pass the signal to their network or file-reading operations. The editor never receives cloud credentials and never deletes remote objects; signing, authorization, retries, CDN URLs and cleanup remain host responsibilities.
+The response supplies `uploadUrl`, `publicUrl`, and optionally `method`, `headers`, `key`, `provider`, `alt`, `title`, `withCredentials`, and `timeout`. See the authenticated [Cloudflare R2 Worker example](examples/cloudflare-r2/) for an end-to-end backend that keeps cloud credentials out of the browser.
+
+The editor creates one `AbortSignal` per batch and exposes a cancel action while uploading. Providers must pass the signal to their network or file-reading operations. The editor never receives cloud access keys and never deletes remote objects; signing, authorization, retries, CDN URLs and cleanup remain host responsibilities. The editor inserts a batch only after every file succeeds, but objects uploaded before a later failure can remain in remote storage, so the host should expire or clean up unreferenced objects.
 
 ### Local/offline images
 

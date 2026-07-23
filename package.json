@@ -24,6 +24,7 @@
   "files": [
     "dist",
     "src/index.d.ts",
+    "src/uploadS3.d.ts",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -33,6 +34,11 @@
       "types": "./src/index.d.ts",
       "import": "./dist/editor.js",
       "require": "./dist/editor.cjs"
+    },
+    "./upload-s3": {
+      "types": "./src/uploadS3.d.ts",
+      "import": "./dist/upload-s3.js",
+      "require": "./dist/upload-s3.cjs"
     },
     "./style.css": "./dist/editor.css"
   },

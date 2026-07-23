@@ -7,6 +7,10 @@ import {
   type NonoEditorProps,
   type UploadImages,
 } from '../src/index.js';
+import {
+  createS3ImageUploader,
+  type S3UploadRequest,
+} from '../src/uploadS3.js';
 
 const standardUpload: UploadImages = async (files, { signal, onProgress }) => {
   if (signal.aborted) return [];
@@ -35,5 +39,13 @@ const publicProps: InstanceType<typeof NonoEditor>['$props'] = {
 
 const features: MarkdownCompatibilityFeature[] = findUnsupportedMarkdown('- [ ] typed');
 const localUpload: UploadImages = createLocalImageUploader();
+const signedRequest: S3UploadRequest = {
+  uploadUrl: 'https://upload.example/image.png',
+  publicUrl: 'https://images.example/image.png',
+  key: 'images/image.png',
+};
+const s3Upload: UploadImages = createS3ImageUploader({
+  getUploadRequest: async () => signedRequest,
+});
 const assets: EditorImage[] = [{ url: 'data:image/png;base64,AAAA', provider: 'local-data-url', size: 4 }];
-void [publicProps, features, legacyUpload, localUpload, assets];
+void [publicProps, features, legacyUpload, localUpload, s3Upload, assets];

@@ -25,6 +25,11 @@ test('public package contract is storage independent', () => {
   assert.equal(pkg.name, '@nonoim/editor');
   assert.equal(pkg.version, '0.1.0');
   assert.equal(pkg.publishConfig.access, 'public');
+  assert.deepEqual(pkg.exports['./upload-s3'], {
+    types: './src/uploadS3.d.ts',
+    import: './dist/upload-s3.js',
+    require: './dist/upload-s3.cjs',
+  });
   assert.match(source, /uploadImages:\s*\{ type: Function/);
   assert.match(source, /emit\('warning'/);
   assert.match(source, /emit\('upload-error'/);

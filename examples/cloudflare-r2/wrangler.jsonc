@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nonomark-r2-upload-example",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "replace-with-your-r2-bucket"
+    }
+  ],
+  "services": [
+    {
+      "binding": "AUTH",
+      "service": "replace-with-your-auth-worker"
+    }
+  ],
+  "vars": {
+    "PUBLIC_BASE_URL": "https://images.example.com",
+    "MAX_IMAGE_BYTES": "10485760"
+  }
+}

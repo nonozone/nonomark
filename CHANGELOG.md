@@ -15,3 +15,5 @@ All notable changes to this package are documented here. The project follows sem
 - Add `toolbar-end` and `footer-status` host integration slots.
 - Standardize provider-neutral image uploads with `AbortSignal`, byte progress, structured asset metadata and cancellation while preserving the previous progress callback.
 - Export `createLocalImageUploader()` as the first standard provider for Base64/offline documents.
+- Add the independent `@nonoim/editor/upload-s3` adapter for presigned PUT uploads to S3, Cloudflare R2, MinIO and compatible providers.
+- Add an authenticated Cloudflare R2 Worker example with streamed uploads and public immutable image delivery.
