@@ -33,7 +33,11 @@ describe('NonoEditor integration', () => {
 
   it('locks image input while an upload is running', async () => {
     let finishUpload;
-    const uploadImages = vi.fn(() => new Promise((resolve) => { finishUpload = resolve; }));
+    let uploadContext;
+    const uploadImages = vi.fn((_files, context) => {
+      uploadContext = context;
+      return new Promise((resolve) => { finishUpload = resolve; });
+    });
     const wrapper = await mountEditor({ uploadImages });
     const input = wrapper.find('input[type="file"]');
     const file = new File(['image'], 'photo.png', { type: 'image/png' });
@@ -42,9 +46,34 @@ describe('NonoEditor integration', () => {
     await input.trigger('change');
     expect(input.attributes()).toHaveProperty('disabled');
     expect(uploadImages).toHaveBeenCalledTimes(1);
+    expect(typeof uploadContext).toBe('function');
+    expect(uploadContext.onProgress).toBe(uploadContext);
+    expect(uploadContext.signal).toBeInstanceOf(AbortSignal);
 
     finishUpload([{ url: 'https://example.com/photo.png', alt: 'photo' }]);
     await flushPromises();
+  });
+
+  it('cancels an active upload through the standard AbortSignal', async () => {
+    let receivedSignal;
+    const uploadImages = vi.fn((_files, { signal }) => new Promise((_resolve, reject) => {
+      receivedSignal = signal;
+      signal.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')));
+    }));
+    const wrapper = await mountEditor({ uploadImages });
+    const input = wrapper.find('input[type="file"]');
+    Object.defineProperty(input.element, 'files', {
+      configurable: true,
+      value: [new File(['image'], 'photo.png', { type: 'image/png' })],
+    });
+
+    await input.trigger('change');
+    await wrapper.find('button[title="Cancel upload"]').trigger('click');
+    await flushPromises();
+
+    expect(receivedSignal.aborted).toBe(true);
+    expect(wrapper.emitted('upload-cancel')).toHaveLength(1);
+    expect(wrapper.text()).toContain('Cancelled');
   });
 
   it('routes pasted images through the host upload function', async () => {

@@ -44,24 +44,87 @@ const content = ref('## Hello');
 | `imageAccept` | `string` | common web images | Accepted MIME types |
 | `maxImageSize` | `number` | `10 MiB` | Client-side size limit per image |
 
-Events: `update:modelValue`, `warning`, `upload-complete`, and `upload-error`.
+Events: `update:modelValue`, `warning`, `upload-complete`, `upload-error`, and `upload-cancel`.
 
 Named slots: `toolbar-end` adds host-specific actions to the end of the formatting toolbar, and `footer-status` adds a compact host status beside the Markdown mode indicator.
 
 ## Images
 
-Provide `uploadImages(files, onProgress)` and resolve to `{ url, alt }[]`. Selecting, pasting or dropping images uses the same function. Only one upload batch runs at a time.
+`uploadImages` is a storage-provider-neutral contract. Selecting, pasting or dropping images uses the same function, and only one batch runs at a time. Resolve to assets with at least a stable `url`; optional `provider`, `key`, MIME and size metadata is preserved in upload events for host-side migration or bookkeeping.
+
+```ts
+type UploadImages = (
+  files: File[],
+  context: {
+    signal: AbortSignal
+    onProgress(progress: {
+      file?: File
+      loaded?: number
+      total?: number
+      percentage?: number
+    }): void
+  }
+) => Promise<Array<{
+  url: string
+  alt?: string
+  title?: string
+  id?: string
+  provider?: string
+  key?: string
+  mimeType?: string
+  size?: number
+}>>
+```
+
+Example using a host endpoint that returns a presigned S3-compatible upload request:
 
 ```js
-const uploadImages = async (files, onProgress) => Promise.all(
-  files.map(async (file) => {
-    onProgress({ file, progress: 0 });
-    const url = await uploadToYourStorage(file);
-    onProgress({ file, progress: 100 });
-    return { url, alt: file.name };
-  }),
-);
+const uploadImages = async (files, { signal, onProgress }) => {
+  const assets = [];
+  let loaded = 0;
+  const total = files.reduce((sum, file) => sum + file.size, 0);
+
+  for (const file of files) {
+    const signed = await fetch('/api/images/presign', {
+      method: 'POST',
+      signal,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: file.name, type: file.type, size: file.size }),
+    }).then((response) => response.json());
+
+    await fetch(signed.uploadUrl, { method: 'PUT', body: file, signal });
+    loaded += file.size;
+    onProgress({ file, loaded, total, percentage: Math.round((loaded / total) * 100) });
+    assets.push({ url: signed.publicUrl, alt: file.name, provider: 's3', key: signed.key });
+  }
+
+  return assets;
+};
 ```
+
+The editor creates one `AbortSignal` per batch and exposes a cancel action while uploading. Providers must pass the signal to their network or file-reading operations. The editor never receives cloud credentials and never deletes remote objects; signing, authorization, retries, CDN URLs and cleanup remain host responsibilities.
+
+### Local/offline images
+
+The built-in local adapter uses the same contract and returns self-contained data URLs:
+
+```js
+import { createLocalImageUploader } from '@nonoim/editor';
+
+const uploadImages = createLocalImageUploader();
+```
+
+```vue
+<NonoEditor
+  v-model="content"
+  allow-base64-images
+  :upload-images="uploadImages"
+/>
+```
+
+Because Base64 increases document size, it is intended for offline or small local documents. A later migration can scan `data:image/...` URLs, upload each blob through a cloud provider, and replace the Markdown URLs without changing the editor.
+
+The previous callable progress parameter remains compatible: `uploadImages(files, onProgress)` implementations continue to work. New providers should use `{ signal, onProgress }`, emit `percentage` rather than the deprecated `progress` alias, and treat `AbortError` as cancellation.
 
 The host must still validate file content, authorization and size on the server. Browser validation is only a usability check.
 

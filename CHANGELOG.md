@@ -13,3 +13,5 @@ All notable changes to this package are documented here. The project follows sem
 - Keep formatting, links, tables and image tools available in Markdown source mode.
 - Add Markdown import/export, guarded new-document actions, autosave status, recoverable snapshots and storage-capacity warnings to the Playground.
 - Add `toolbar-end` and `footer-status` host integration slots.
+- Standardize provider-neutral image uploads with `AbortSignal`, byte progress, structured asset metadata and cancellation while preserving the previous progress callback.
+- Export `createLocalImageUploader()` as the first standard provider for Base64/offline documents.

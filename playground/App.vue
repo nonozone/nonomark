@@ -67,9 +67,8 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { NonoEditor } from '../src/index.js';
+import { NonoEditor, createLocalImageUploader } from '../src/index.js';
 import { createMarkdownExport, readMarkdownFile } from './files.js';
-import { embedImages } from './images.js';
 import {
   getStorageHealth,
   loadDocument,
@@ -216,7 +215,7 @@ const restoreSnapshot = (snapshot) => {
 };
 
 const snapshotSummary = (content) => content.replace(/data:image\/[^;]+;base64,[^)\s]+/gi, '[嵌入图片]').replace(/\s+/g, ' ').trim().slice(0, 90) || '空白内容';
-const uploadImages = (files, onProgress) => embedImages(files, onProgress);
+const uploadImages = createLocalImageUploader();
 const handlePageHide = () => saveNow({ createSnapshot: false });
 
 watch(markdown, () => {

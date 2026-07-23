@@ -12,7 +12,7 @@ import {
   saveSnapshot,
   shouldCreateSnapshot,
 } from '../playground/storage.js';
-import { embedImages } from '../playground/images.js';
+import { createLocalImageUploader } from '../src/imageUpload.js';
 import { createMarkdownExport, readMarkdownFile } from '../playground/files.js';
 
 const makeStorage = (initial = {}) => {
@@ -106,24 +106,24 @@ test('playground rejects oversized or non-Markdown imports', async () => {
 });
 
 test('playground embeds images as self-contained data URLs', async () => {
-  const files = [{ name: 'first.png' }, { name: 'second.webp' }];
+  const files = [{ name: 'first.png', type: 'image/png', size: 4 }, { name: 'second.webp', type: 'image/webp', size: 4 }];
   const progress = [];
-  const images = await embedImages(
-    files,
-    (value) => progress.push(value.progress),
-    async (file) => `data:image/${file.name.endsWith('.png') ? 'png' : 'webp'};base64,AAAA`,
-  );
+  const uploadImages = createLocalImageUploader({
+    readFile: async (file) => `data:${file.type};base64,AAAA`,
+  });
+  const images = await uploadImages(files, { onProgress: (value) => progress.push(value.percentage) });
 
   assert.deepEqual(images, [
-    { url: 'data:image/png;base64,AAAA', alt: 'first' },
-    { url: 'data:image/webp;base64,AAAA', alt: 'second' },
+    { url: 'data:image/png;base64,AAAA', alt: 'first', provider: 'local-data-url', mimeType: 'image/png', size: 4 },
+    { url: 'data:image/webp;base64,AAAA', alt: 'second', provider: 'local-data-url', mimeType: 'image/webp', size: 4 },
   ]);
   assert.equal(progress.at(-1), 100);
 });
 
 test('playground rejects non-image embedded data', async () => {
+  const uploadImages = createLocalImageUploader({ readFile: async () => 'data:text/plain;base64,AAAA' });
   await assert.rejects(
-    embedImages([{ name: 'fake.png' }], undefined, async () => 'data:text/plain;base64,AAAA'),
+    uploadImages([{ name: 'fake.png', type: 'image/png', size: 4 }], { onProgress() {} }),
     /Unsupported embedded image/,
   );
 });
