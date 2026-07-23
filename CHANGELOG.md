@@ -4,6 +4,8 @@ All notable changes to this package are documented here. The project follows sem
 
 ## Unreleased
 
+## 0.2.0 - 2026-07-23
+
 - Protect task lists, frontmatter, footnotes and raw HTML from lossy visual conversion.
 - Add `disabled`, `readonly` and `autofocus` component states.
 - Add inline link editing and paste/drop image uploads.

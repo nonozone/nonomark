@@ -23,7 +23,7 @@ test('public package contract is storage independent', () => {
   const pkg = JSON.parse(read('../package.json'));
   const source = read('../src/NonoEditor.vue');
   assert.equal(pkg.name, '@nonoim/editor');
-  assert.equal(pkg.version, '0.1.0');
+  assert.equal(pkg.version, '0.2.0');
   assert.equal(pkg.publishConfig.access, 'public');
   assert.deepEqual(pkg.exports['./upload-s3'], {
     types: './src/uploadS3.d.ts',

@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "nonoMark is a lightweight, dependable Vue 3 Markdown editor built on Tiptap.",
   "type": "module",
   "license": "MIT",
