@@ -1,3 +1,5 @@
+export * from './editorBackup.js';
+
 export type MarkdownCompatibilityFeature = 'task-list' | 'frontmatter' | 'footnote' | 'raw-html';
 export type ImageUploadStatus = 'uploading' | 'success' | 'error' | 'cancelled';
 

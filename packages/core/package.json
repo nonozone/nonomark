@@ -1,7 +1,7 @@
 {
   "name": "@nonoim/editor-core",
-  "version": "0.3.1",
-  "description": "Framework-independent Markdown and image upload contracts for nonoMark.",
+  "version": "0.4.0",
+  "description": "Framework-independent Markdown, recovery backup and image upload contracts for nonoMark.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -9,7 +9,7 @@
     "url": "git+https://github.com/nonozone/nonomark.git",
     "directory": "packages/core"
   },
-  "files": ["dist", "src/index.d.ts", "src/uploadS3.d.ts", "README.md"],
+  "files": ["dist", "src/index.d.ts", "src/editorBackup.d.ts", "src/uploadS3.d.ts", "README.md"],
   "main": "./dist/core.cjs",
   "module": "./dist/core.js",
   "types": "./src/index.d.ts",
@@ -18,6 +18,11 @@
       "types": "./src/index.d.ts",
       "import": "./dist/core.js",
       "require": "./dist/core.cjs"
+    },
+    "./backup": {
+      "types": "./src/editorBackup.d.ts",
+      "import": "./dist/backup.js",
+      "require": "./dist/backup.cjs"
     },
     "./upload-s3": {
       "types": "./src/uploadS3.d.ts",

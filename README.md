@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/nonozone/nonomark/actions/workflows/ci.yml/badge.svg)](https://github.com/nonozone/nonomark/actions/workflows/ci.yml)
 
-A lightweight, dependable Markdown editor for Vue 3 and React, built with official Tiptap adapters. Markdown remains the application contract; storage, authentication and autosave stay in the host application.
+A lightweight, dependable Markdown editor for Vue 3 and React, built with official Tiptap adapters. Markdown remains the application contract; authentication and formal persistence stay in the host application. An optional framework-independent recovery controller protects unsaved editor state in browser storage.
 
 Try the distraction-free editor at [nonozone.github.io/nonomark](https://nonozone.github.io/nonomark/).
 
@@ -10,7 +10,7 @@ Try the distraction-free editor at [nonozone.github.io/nonomark](https://nonozon
 
 | Package | Purpose |
 | --- | --- |
-| `@nonoim/editor-core` | Framework-independent Markdown and image upload contracts |
+| `@nonoim/editor-core` | Framework-independent Markdown, recovery backup and image upload contracts |
 | `@nonoim/editor-vue` | Official Vue 3 editor |
 | `@nonoim/editor-react` | Official React editor |
 | `@nonoim/editor` | Compatibility package for existing Vue projects |
@@ -35,7 +35,7 @@ const content = ref('## Hello');
 </template>
 ```
 
-Existing `@nonoim/editor` applications remain supported in 0.3.x and can migrate by changing the package name.
+Existing `@nonoim/editor` applications remain supported in 0.4.x and can migrate by changing the package name.
 
 ## React
 
@@ -55,6 +55,38 @@ export function ArticleEditor() {
 ```
 
 React uses `value`/`onChange`; Vue uses `v-model`. Both adapters share Markdown protection and the same `uploadImages` contract.
+
+## Recovery backups
+
+Recovery backups are independent from the Markdown component. One controller owns one stable `backupKey` and can store the complete host form, including titles, summaries, taxonomy and SEO fields alongside Markdown.
+
+```js
+import { createEditorBackup } from '@nonoim/editor-core/backup';
+
+const backup = createEditorBackup({
+  backupKey: `${adminId}:posts:${recordId}`,
+  debounceMs: 800,
+  onStatus: (event) => updateBackupStatus(event.status),
+  onError: (event) => reportBackupError(event.error),
+});
+
+const found = await backup.discover();
+if (found && await confirmRestore()) {
+  form = await backup.restore();
+} else if (found) {
+  await backup.discard();
+}
+
+// Call whenever the complete editor form changes.
+backup.schedule(form);
+
+// Call only after the host's formal save succeeds.
+await backup.clear();
+```
+
+Different Markdown editors do not collide when they use different keys. The controller exposes `idle`, `scheduled`, `saving`, `saved`, `available`, `restored`, `discarded`, `cleared`, `error` and `destroyed` states, plus status/error events. It uses `localStorage` by default and accepts a custom storage adapter, but has no PocketBase, Vue, React or application-specific dependency.
+
+Payloads must be JSON-serializable. Image `File` objects are intentionally not stored; keep the host's existing unsaved-file warning and upload lifecycle.
 
 ## Vue props
 

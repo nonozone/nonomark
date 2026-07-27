@@ -43,7 +43,10 @@ test('core entry is framework independent and exposes both upload providers', as
   assert.doesNotMatch(source, /from ['"](?:vue|react)/);
 
   const core = await import('../packages/core/src/index.js');
+  const backup = await import('../packages/core/src/editorBackup.js');
   const s3 = await import('../packages/core/src/uploadS3.js');
+  assert.equal(typeof core.createEditorBackup, 'function');
+  assert.equal(typeof backup.createEditorBackup, 'function');
   assert.equal(typeof core.createLocalImageUploader, 'function');
   assert.equal(typeof core.requiresSourceMode, 'function');
   assert.equal(typeof s3.createS3ImageUploader, 'function');

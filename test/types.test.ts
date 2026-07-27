@@ -1,7 +1,9 @@
 import {
   NonoEditor,
+  createEditorBackup,
   createLocalImageUploader,
   findUnsupportedMarkdown,
+  type EditorBackupController,
   type EditorImage,
   type MarkdownCompatibilityFeature,
   type NonoEditorProps,
@@ -53,4 +55,15 @@ const s3Upload: UploadImages = createS3ImageUploader({
 });
 const assets: EditorImage[] = [{ url: 'data:image/png;base64,AAAA', provider: 'local-data-url', size: 4 }];
 const reactProps: ReactNonoEditorProps = { value: '# React', onChange: (value) => value.length, uploadImages: standardUpload };
-void [publicProps, features, legacyUpload, localUpload, s3Upload, assets, ReactNonoEditor, reactProps];
+type ArticleBackup = { title: string; markdown: string };
+const backupStorage = new Map<string, string>();
+const editorBackup: EditorBackupController<ArticleBackup> = createEditorBackup<ArticleBackup>({
+  backupKey: 'admin-1:posts:post-1',
+  storage: {
+    getItem: (key) => backupStorage.get(key) ?? null,
+    setItem: (key, value) => backupStorage.set(key, value),
+    removeItem: (key) => backupStorage.delete(key),
+  },
+});
+editorBackup.schedule({ title: 'Typed', markdown: '# Typed' });
+void [publicProps, features, legacyUpload, localUpload, s3Upload, assets, ReactNonoEditor, reactProps, editorBackup];
