@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor-core",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Framework-independent Markdown and image upload contracts for nonoMark.",
   "type": "module",
   "license": "MIT",
@@ -26,7 +26,10 @@
     }
   },
   "sideEffects": false,
-  "scripts": { "build": "vite build --config vite.config.js" },
+  "scripts": {
+    "build": "vite build --config vite.config.js",
+    "prepack": "npm run build"
+  },
   "publishConfig": { "access": "public" },
   "engines": { "node": ">=20.19.0" }
 }

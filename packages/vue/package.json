@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor-vue",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "The official Vue 3 adapter for nonoMark.",
   "type": "module",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "./style.css": "./dist/editor-vue.css"
   },
   "dependencies": {
-    "@nonoim/editor-core": "0.3.0",
+    "@nonoim/editor-core": "0.3.1",
     "@tiptap/core": "3.29.0",
     "@tiptap/extension-image": "3.29.0",
     "@tiptap/extension-table": "3.29.0",
@@ -26,7 +26,10 @@
   },
   "peerDependencies": { "vue": "^3.5.0" },
   "sideEffects": ["**/*.css"],
-  "scripts": { "build": "vite build --config vite.config.js" },
+  "scripts": {
+    "build": "vite build --config vite.config.js",
+    "prepack": "npm run build"
+  },
   "publishConfig": { "access": "public" },
   "engines": { "node": ">=20.19.0" }
 }

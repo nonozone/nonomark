@@ -15,20 +15,27 @@ test('framework packages have explicit dependency boundaries', () => {
   assert.equal(core.peerDependencies, undefined);
 
   assert.equal(vue.name, '@nonoim/editor-vue');
+  assert.equal(vue.version, core.version);
   assert.equal(vue.peerDependencies.vue, '^3.5.0');
-  assert.equal(vue.dependencies['@nonoim/editor-core'], '0.3.0');
+  assert.equal(vue.dependencies['@nonoim/editor-core'], core.version);
   assert.equal(vue.dependencies['@nonoim/editor'], undefined);
   assert.equal(vue.dependencies.react, undefined);
 
   assert.equal(react.name, '@nonoim/editor-react');
+  assert.equal(react.version, core.version);
   assert.equal(react.peerDependencies.react, '^18.2.0 || ^19.0.0');
   assert.equal(react.peerDependencies['react-dom'], '^18.2.0 || ^19.0.0');
-  assert.equal(react.dependencies['@nonoim/editor-core'], '0.3.0');
+  assert.equal(react.dependencies['@nonoim/editor-core'], core.version);
   assert.equal(react.dependencies.vue, undefined);
 
   assert.equal(compat.name, '@nonoim/editor');
-  assert.equal(compat.dependencies['@nonoim/editor-vue'], '0.3.0');
-  assert.equal(compat.dependencies['@nonoim/editor-core'], '0.3.0');
+  assert.equal(compat.version, core.version);
+  assert.equal(compat.dependencies['@nonoim/editor-vue'], vue.version);
+  assert.equal(compat.dependencies['@nonoim/editor-core'], core.version);
+
+  for (const pkg of [core, vue, react, compat]) {
+    assert.equal(pkg.scripts.prepack, 'npm run build');
+  }
 });
 
 test('core entry is framework independent and exposes both upload providers', async () => {

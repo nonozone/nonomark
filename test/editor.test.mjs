@@ -26,7 +26,7 @@ test('public package contract is storage independent', () => {
   assert.equal(root.name, 'nonomark');
   assert.equal(root.private, true);
   assert.equal(pkg.name, '@nonoim/editor');
-  assert.equal(pkg.version, '0.3.0');
+  assert.equal(pkg.version, root.version);
   assert.equal(pkg.publishConfig.access, 'public');
   assert.deepEqual(pkg.exports['./upload-s3'], {
     types: './src/uploadS3.d.ts',
