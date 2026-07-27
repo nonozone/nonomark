@@ -115,3 +115,4 @@ export const getStorageHealth = (
   const level = ratio >= 0.9 ? 'danger' : ratio >= 0.75 ? 'warning' : 'ok';
   return { level, projectedBytes, budgetBytes, ratio, remainingBytes: Math.max(0, budgetBytes - projectedBytes) };
 };
+// Playground-only browser persistence helpers.

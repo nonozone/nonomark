@@ -1,0 +1,23 @@
+{
+  "name": "@nonoim/editor",
+  "version": "0.3.0",
+  "description": "Compatibility package for the nonoMark Vue editor. New Vue projects should use @nonoim/editor-vue.",
+  "type": "module",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/nonozone/nonomark.git", "directory": "packages/editor" },
+  "files": ["dist", "src/index.d.ts", "src/uploadS3.d.ts", "README.md"],
+  "main": "./dist/editor.cjs",
+  "module": "./dist/editor.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "import": "./dist/editor.js", "require": "./dist/editor.cjs" },
+    "./upload-s3": { "types": "./src/uploadS3.d.ts", "import": "./dist/upload-s3.js", "require": "./dist/upload-s3.cjs" },
+    "./style.css": "./dist/editor.css"
+  },
+  "dependencies": { "@nonoim/editor-core": "0.3.0", "@nonoim/editor-vue": "0.3.0" },
+  "peerDependencies": { "vue": "^3.5.0" },
+  "sideEffects": ["**/*.css"],
+  "scripts": { "build": "vite build --config vite.config.js" },
+  "publishConfig": { "access": "public" },
+  "engines": { "node": ">=20.19.0" }
+}

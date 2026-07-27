@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createS3ImageUploader } from '../src/uploadS3.js';
+import { createS3ImageUploader } from '../packages/core/src/uploadS3.js';
 
 const file = (name, size, type = 'image/png') => ({ name, size, type });
 const context = (signal, values) => Object.assign(

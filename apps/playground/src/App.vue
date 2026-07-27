@@ -67,7 +67,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { NonoEditor, createLocalImageUploader } from '../src/index.js';
+import { NonoEditor, createLocalImageUploader } from '@nonoim/editor-vue';
 import { createMarkdownExport, readMarkdownFile } from './files.js';
 import {
   getStorageHealth,

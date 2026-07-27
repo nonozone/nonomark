@@ -17,7 +17,7 @@ Use a custom domain for production image delivery. The example stores immutable 
 ## Host application
 
 ```js
-import { createS3ImageUploader } from '@nonoim/editor/upload-s3';
+import { createS3ImageUploader } from '@nonoim/editor-core/upload-s3';
 
 export const uploadImages = createS3ImageUploader({
   provider: 'cloudflare-r2',

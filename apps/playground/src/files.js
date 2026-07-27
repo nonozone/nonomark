@@ -18,3 +18,4 @@ export const createMarkdownExport = (content, date = new Date()) => ({
   filename: createMarkdownFilename(date),
   blob: new Blob([String(content ?? '')], { type: 'text/markdown;charset=utf-8' }),
 });
+// Playground-only local file helpers.

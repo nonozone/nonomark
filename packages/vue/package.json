@@ -1,0 +1,32 @@
+{
+  "name": "@nonoim/editor-vue",
+  "version": "0.3.0",
+  "description": "The official Vue 3 adapter for nonoMark.",
+  "type": "module",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/nonozone/nonomark.git", "directory": "packages/vue" },
+  "files": ["dist", "src/index.d.ts", "README.md"],
+  "main": "./dist/editor-vue.cjs",
+  "module": "./dist/editor-vue.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "import": "./dist/editor-vue.js", "require": "./dist/editor-vue.cjs" },
+    "./style.css": "./dist/editor-vue.css"
+  },
+  "dependencies": {
+    "@nonoim/editor-core": "0.3.0",
+    "@tiptap/core": "3.29.0",
+    "@tiptap/extension-image": "3.29.0",
+    "@tiptap/extension-table": "3.29.0",
+    "@tiptap/extensions": "3.29.0",
+    "@tiptap/markdown": "3.29.0",
+    "@tiptap/pm": "3.29.0",
+    "@tiptap/starter-kit": "3.29.0",
+    "@tiptap/vue-3": "3.29.0"
+  },
+  "peerDependencies": { "vue": "^3.5.0" },
+  "sideEffects": ["**/*.css"],
+  "scripts": { "build": "vite build --config vite.config.js" },
+  "publishConfig": { "access": "public" },
+  "engines": { "node": ">=20.19.0" }
+}

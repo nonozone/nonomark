@@ -63,7 +63,7 @@ import Image from '@tiptap/extension-image';
 import { TableKit } from '@tiptap/extension-table';
 import { Markdown } from '@tiptap/markdown';
 import { Placeholder } from '@tiptap/extensions';
-import { findUnsupportedMarkdown, requiresSourceMode } from './markdownCompatibility.js';
+import { findUnsupportedMarkdown, requiresSourceMode } from '@nonoim/editor-core';
 
 const DEFAULT_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml';
 const props = defineProps({ modelValue: { type: String, default: '' }, placeholder: { type: String, default: '' }, rows: { type: Number, default: 10 }, help: { type: String, default: '' }, fill: { type: Boolean, default: false }, disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, autofocus: { type: Boolean, default: false }, allowBase64Images: { type: Boolean, default: false }, locale: { type: String, default: 'en' }, uploadImages: { type: Function, default: null }, imageAccept: { type: String, default: DEFAULT_IMAGE_ACCEPT }, maxImageSize: { type: Number, default: 10 * 1024 * 1024 } });

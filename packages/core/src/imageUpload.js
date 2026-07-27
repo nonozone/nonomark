@@ -46,9 +46,7 @@ export const createLocalImageUploader = (options = {}) => {
       onProgress({ file, loaded, total, percentage, progress: percentage, status: 'uploading' });
       const url = await readFile(file, signal);
       throwIfAborted(signal);
-      if (typeof url !== 'string' || !supportedDataUrl.test(url)) {
-        throw new Error(`Unsupported embedded image: ${file.name}`);
-      }
+      if (typeof url !== 'string' || !supportedDataUrl.test(url)) throw new Error(`Unsupported embedded image: ${file.name}`);
       loaded += Number(file.size) || 1;
       images.push({
         url,

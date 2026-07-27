@@ -2,21 +2,30 @@
 
 [![CI](https://github.com/nonozone/nonomark/actions/workflows/ci.yml/badge.svg)](https://github.com/nonozone/nonomark/actions/workflows/ci.yml)
 
-A lightweight, dependable Vue 3 visual Markdown editor built with official Tiptap packages. Markdown remains the `v-model` contract; storage, authentication and autosave stay in the host application.
+A lightweight, dependable Markdown editor for Vue 3 and React, built with official Tiptap adapters. Markdown remains the application contract; storage, authentication and autosave stay in the host application.
 
 Try the distraction-free editor at [nonozone.github.io/nonomark](https://nonozone.github.io/nonomark/).
 
-## Install
+## Packages
+
+| Package | Purpose |
+| --- | --- |
+| `@nonoim/editor-core` | Framework-independent Markdown and image upload contracts |
+| `@nonoim/editor-vue` | Official Vue 3 editor |
+| `@nonoim/editor-react` | Official React editor |
+| `@nonoim/editor` | Compatibility package for existing Vue projects |
+
+## Vue
 
 ```bash
-npm install @nonoim/editor
+npm install @nonoim/editor-vue
 ```
 
 ```vue
 <script setup>
 import { ref } from 'vue';
-import { NonoEditor } from '@nonoim/editor';
-import '@nonoim/editor/style.css';
+import { NonoEditor } from '@nonoim/editor-vue';
+import '@nonoim/editor-vue/style.css';
 
 const content = ref('## Hello');
 </script>
@@ -26,7 +35,28 @@ const content = ref('## Hello');
 </template>
 ```
 
-## Props
+Existing `@nonoim/editor` applications remain supported in 0.3.x and can migrate by changing the package name.
+
+## React
+
+```bash
+npm install @nonoim/editor-react
+```
+
+```jsx
+import { useState } from 'react';
+import { NonoEditor } from '@nonoim/editor-react';
+import '@nonoim/editor-react/style.css';
+
+export function ArticleEditor() {
+  const [content, setContent] = useState('## Hello');
+  return <NonoEditor value={content} onChange={setContent} locale="zh" />;
+}
+```
+
+React uses `value`/`onChange`; Vue uses `v-model`. Both adapters share Markdown protection and the same `uploadImages` contract.
+
+## Vue props
 
 | Prop | Type | Default | Purpose |
 | --- | --- | --- | --- |
@@ -79,7 +109,7 @@ type UploadImages = (
 For S3, Cloudflare R2, MinIO and other S3-compatible storage, import the optional adapter from its independent package entry. Your host endpoint returns a presigned PUT request; the adapter performs the upload with byte progress and cancellation support.
 
 ```js
-import { createS3ImageUploader } from '@nonoim/editor/upload-s3';
+import { createS3ImageUploader } from '@nonoim/editor-core/upload-s3';
 
 const uploadImages = createS3ImageUploader({
   provider: 's3',

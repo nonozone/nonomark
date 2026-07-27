@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
-import App from '../playground/App.vue';
-import { SNAPSHOTS_KEY, STORAGE_KEY, loadDocument, loadSnapshots, saveDocument } from '../playground/storage.js';
+import App from '../apps/playground/src/App.vue';
+import { SNAPSHOTS_KEY, STORAGE_KEY, loadDocument, loadSnapshots, saveDocument } from '../apps/playground/src/storage.js';
 
 let wrapper;
 

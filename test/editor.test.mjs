@@ -10,7 +10,7 @@ import {
   containsRawHtml,
   findUnsupportedMarkdown,
   requiresSourceMode,
-} from '../src/markdownCompatibility.js';
+} from '../packages/core/src/markdownCompatibility.js';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const makeEditor = (content) => new Editor({
@@ -20,10 +20,13 @@ const makeEditor = (content) => new Editor({
 });
 
 test('public package contract is storage independent', () => {
-  const pkg = JSON.parse(read('../package.json'));
-  const source = read('../src/NonoEditor.vue');
+  const root = JSON.parse(read('../package.json'));
+  const pkg = JSON.parse(read('../packages/editor/package.json'));
+  const source = read('../packages/vue/src/NonoEditor.vue');
+  assert.equal(root.name, 'nonomark');
+  assert.equal(root.private, true);
   assert.equal(pkg.name, '@nonoim/editor');
-  assert.equal(pkg.version, '0.2.0');
+  assert.equal(pkg.version, '0.3.0');
   assert.equal(pkg.publishConfig.access, 'public');
   assert.deepEqual(pkg.exports['./upload-s3'], {
     types: './src/uploadS3.d.ts',

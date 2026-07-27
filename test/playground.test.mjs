@@ -11,9 +11,9 @@ import {
   saveDocument,
   saveSnapshot,
   shouldCreateSnapshot,
-} from '../playground/storage.js';
-import { createLocalImageUploader } from '../src/imageUpload.js';
-import { createMarkdownExport, readMarkdownFile } from '../playground/files.js';
+} from '../apps/playground/src/storage.js';
+import { createLocalImageUploader } from '../packages/core/src/index.js';
+import { createMarkdownExport, readMarkdownFile } from '../apps/playground/src/files.js';
 
 const makeStorage = (initial = {}) => {
   const values = new Map(Object.entries(initial));

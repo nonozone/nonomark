@@ -64,3 +64,4 @@ body { min-height: 100dvh; overflow: hidden; background: #f4f1ea; }
   .playground-file-panel { position: fixed; top: 58px; right: 8px; }
   .editor-stage .nono-rich-editor__footer-meta { gap: 8px; }
 }
+/* Playground shell styles. */

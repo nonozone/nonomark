@@ -21,4 +21,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm pack --dry-run --ignore-scripts
+      - run: npm pack --workspaces --dry-run --ignore-scripts

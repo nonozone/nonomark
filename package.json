@@ -1,87 +1,40 @@
 {
-  "name": "@nonoim/editor",
-  "version": "0.2.0",
-  "description": "nonoMark is a lightweight, dependable Vue 3 Markdown editor built on Tiptap.",
+  "name": "nonomark",
+  "version": "0.3.0",
+  "private": true,
+  "description": "nonoMark editor monorepo.",
   "type": "module",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nonozone/nonomark.git"
-  },
-  "homepage": "https://github.com/nonozone/nonomark#readme",
-  "bugs": {
-    "url": "https://github.com/nonozone/nonomark/issues"
-  },
-  "keywords": [
-    "vue",
-    "markdown",
-    "editor",
-    "tiptap"
-  ],
-  "main": "./dist/editor.cjs",
-  "module": "./dist/editor.js",
-  "types": "./src/index.d.ts",
-  "files": [
-    "dist",
-    "src/index.d.ts",
-    "src/uploadS3.d.ts",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE"
-  ],
-  "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "import": "./dist/editor.js",
-      "require": "./dist/editor.cjs"
-    },
-    "./upload-s3": {
-      "types": "./src/uploadS3.d.ts",
-      "import": "./dist/upload-s3.js",
-      "require": "./dist/upload-s3.cjs"
-    },
-    "./style.css": "./dist/editor.css"
-  },
-  "sideEffects": [
-    "**/*.css"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "vite build",
-    "playground": "vite --config vite.playground.config.js --host 127.0.0.1 --port 4173",
-    "build:playground": "vite build --config vite.playground.config.js",
+    "build": "npm run build --workspaces --if-present",
+    "playground": "vite --config apps/playground/vite.config.js --host 127.0.0.1 --port 4173",
+    "build:playground": "vite build --config apps/playground/vite.config.js",
     "test": "npm run test:unit && npm run test:component",
     "test:unit": "node --test test/*.test.mjs",
-    "test:component": "vitest run test/*.test.js",
+    "test:component": "vitest run test/*.test.js test/*.test.jsx",
     "typecheck": "tsc -p tsconfig.json",
-    "check": "npm test && npm run typecheck && npm run build && npm run build:playground",
-    "prepack": "npm run check"
-  },
-  "dependencies": {
-    "@tiptap/core": "3.28.0",
-    "@tiptap/extension-image": "3.28.0",
-    "@tiptap/extension-table": "3.28.0",
-    "@tiptap/extensions": "3.28.0",
-    "@tiptap/markdown": "3.28.0",
-    "@tiptap/pm": "3.28.0",
-    "@tiptap/starter-kit": "3.28.0",
-    "@tiptap/vue-3": "3.28.0"
-  },
-  "peerDependencies": {
-    "vue": "^3.5.0"
+    "check": "npm test && npm run typecheck && npm run build && npm run build:playground"
   },
   "devDependencies": {
+    "@tiptap/core": "3.29.0",
+    "@tiptap/extension-image": "3.29.0",
+    "@tiptap/extension-table": "3.29.0",
+    "@tiptap/markdown": "3.29.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@tiptap/react": "3.29.0",
+    "@tiptap/starter-kit": "3.29.0",
+    "@vitejs/plugin-react": "^5.0.4",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vue/test-utils": "^2.4.11",
     "jsdom": "^29.1.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "typescript": "^7.0.2",
     "vite": "^7.3.1",
     "vitest": "^4.1.10",
     "vue": "^3.5.39"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "engines": {
-    "node": ">=20.19.0"
-  }
+  "engines": { "node": ">=20.19.0" }
 }

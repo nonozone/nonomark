@@ -4,6 +4,11 @@ All notable changes to this package are documented here. The project follows sem
 
 ## Unreleased
 
+- Convert the repository to a private npm-workspaces monorepo with `apps/` and `packages/` boundaries.
+- Add framework-independent `@nonoim/editor-core`.
+- Add official `@nonoim/editor-vue` and `@nonoim/editor-react` packages with shared visual and upload behavior.
+- Keep `@nonoim/editor` as a compatibility package for existing Vue projects.
+
 ## 0.2.0 - 2026-07-23
 
 - Protect task lists, frontmatter, footnotes and raw HTML from lossy visual conversion.

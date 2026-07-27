@@ -25,3 +25,4 @@
 .nono-rich-editor.is-disabled .nono-rich-editor__content,
 .nono-rich-editor textarea:read-only,
 .nono-rich-editor textarea:disabled { background: #f8fafc; }
+/* Shared interaction states for framework adapters. */

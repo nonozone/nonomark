@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
-import NonoEditor from '../src/NonoEditor.vue';
+import NonoEditor from '../packages/vue/src/NonoEditor.vue';
 
 const mounted = [];
 const mountEditor = async (props = {}, options = {}) => {

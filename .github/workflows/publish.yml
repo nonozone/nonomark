@@ -21,4 +21,7 @@ jobs:
           cache: npm
       - run: npm install --global npm@latest
       - run: npm ci
-      - run: npm publish --access public --provenance
+      - run: npm publish --workspace @nonoim/editor-core --access public --provenance
+      - run: npm publish --workspace @nonoim/editor-vue --access public --provenance
+      - run: npm publish --workspace @nonoim/editor-react --access public --provenance
+      - run: npm publish --workspace @nonoim/editor --access public --provenance

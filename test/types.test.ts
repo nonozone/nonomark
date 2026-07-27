@@ -6,11 +6,15 @@ import {
   type MarkdownCompatibilityFeature,
   type NonoEditorProps,
   type UploadImages,
-} from '../src/index.js';
+} from '../packages/vue/src/index.js';
 import {
   createS3ImageUploader,
   type S3UploadRequest,
-} from '../src/uploadS3.js';
+} from '../packages/core/src/uploadS3.js';
+import {
+  NonoEditor as ReactNonoEditor,
+  type NonoEditorProps as ReactNonoEditorProps,
+} from '@nonoim/editor-react';
 
 const standardUpload: UploadImages = async (files, { signal, onProgress }) => {
   if (signal.aborted) return [];
@@ -48,4 +52,5 @@ const s3Upload: UploadImages = createS3ImageUploader({
   getUploadRequest: async () => signedRequest,
 });
 const assets: EditorImage[] = [{ url: 'data:image/png;base64,AAAA', provider: 'local-data-url', size: 4 }];
-void [publicProps, features, legacyUpload, localUpload, s3Upload, assets];
+const reactProps: ReactNonoEditorProps = { value: '# React', onChange: (value) => value.length, uploadImages: standardUpload };
+void [publicProps, features, legacyUpload, localUpload, s3Upload, assets, ReactNonoEditor, reactProps];

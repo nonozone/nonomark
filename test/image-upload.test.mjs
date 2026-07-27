@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLocalImageUploader } from '../src/imageUpload.js';
+import { createLocalImageUploader } from '../packages/core/src/index.js';
 
 const imageFile = (name, type, size = 4) => ({ name, type, size });
 
