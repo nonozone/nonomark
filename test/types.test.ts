@@ -5,6 +5,7 @@ import {
   findUnsupportedMarkdown,
   type EditorBackupController,
   type EditorImage,
+  type ImportRemoteImages,
   type MarkdownCompatibilityFeature,
   type NonoEditorProps,
   type UploadImages,
@@ -35,6 +36,7 @@ const props: NonoEditorProps = {
   autofocus: false,
   allowBase64Images: true,
   uploadImages: standardUpload,
+  importRemoteImages: async (images) => images.map((image) => ({ id: image.id, url: `/uploads/${image.id}.webp` })),
 };
 
 const publicProps: InstanceType<typeof NonoEditor>['$props'] = {
@@ -54,7 +56,8 @@ const s3Upload: UploadImages = createS3ImageUploader({
   getUploadRequest: async () => signedRequest,
 });
 const assets: EditorImage[] = [{ url: 'data:image/png;base64,AAAA', provider: 'local-data-url', size: 4 }];
-const reactProps: ReactNonoEditorProps = { value: '# React', onChange: (value) => value.length, uploadImages: standardUpload };
+const remoteImport: ImportRemoteImages = async (images, { signal }) => signal.aborted ? [] : images.map((image) => ({ id: image.id, sourceUrl: image.url, url: `https://cdn.example/${image.id}.webp` }));
+const reactProps: ReactNonoEditorProps = { value: '# React', onChange: (value) => value.length, uploadImages: standardUpload, importRemoteImages: remoteImport };
 type ArticleBackup = { title: string; markdown: string };
 const backupStorage = new Map<string, string>();
 const editorBackup: EditorBackupController<ArticleBackup> = createEditorBackup<ArticleBackup>({

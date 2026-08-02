@@ -62,4 +62,45 @@ describe('React NonoEditor', () => {
     expect(context.signal).toBeInstanceOf(AbortSignal);
     expect(onUploadComplete).toHaveBeenCalledTimes(1);
   });
+
+  it('imports remote Markdown images from a visual paste', async () => {
+    const onChange = vi.fn();
+    const onRemoteImageImportComplete = vi.fn();
+    const importRemoteImages = vi.fn(async (images) => [
+      { id: images[0].id, url: 'https://cdn.example/react.jpg' },
+    ]);
+    const container = await renderEditor({ importRemoteImages, onChange, onRemoteImageImportComplete });
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'clipboardData', { value: {
+      files: [],
+      getData: (type) => type === 'text/plain' ? '![React](https://origin.example/react.jpg)' : '',
+    } });
+
+    await act(async () => container.querySelector('[contenteditable]').dispatchEvent(event));
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(importRemoteImages).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenLastCalledWith(expect.stringContaining('https://cdn.example/react.jpg'));
+    expect(onRemoteImageImportComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('imports remote Markdown images in source mode', async () => {
+    const onChange = vi.fn();
+    const importRemoteImages = vi.fn(async (images) => [
+      { id: images[0].id, url: 'https://cdn.example/source.jpg' },
+    ]);
+    const container = await renderEditor({ value: '- [ ] protected\n', importRemoteImages, onChange });
+    const source = container.querySelector('textarea.nono-rich-editor__source');
+    source.setSelectionRange(source.value.length, source.value.length);
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'clipboardData', { value: {
+      files: [],
+      getData: (type) => type === 'text/plain' ? '![Source](https://origin.example/source.jpg)' : '',
+    } });
+
+    await act(async () => source.dispatchEvent(event));
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(onChange).toHaveBeenLastCalledWith('- [ ] protected\n![Source](https://cdn.example/source.jpg)');
+  });
 });

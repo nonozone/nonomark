@@ -1,5 +1,5 @@
 import type { DefineComponent } from 'vue';
-import type { ImageAsset, UploadImages } from '@nonoim/editor-core';
+import type { ImageAsset, ImportRemoteImages, RemoteImageImportResult, RemoteImageReference, UploadImages } from '@nonoim/editor-core';
 export * from '@nonoim/editor-core';
 
 export interface NonoEditorProps {
@@ -14,6 +14,7 @@ export interface NonoEditorProps {
   allowBase64Images?: boolean;
   locale?: string;
   uploadImages?: UploadImages | null;
+  importRemoteImages?: ImportRemoteImages | null;
   imageAccept?: string;
   maxImageSize?: number;
 }
@@ -24,6 +25,9 @@ export type NonoEditorEmits = {
   'upload-complete': (images: ImageAsset[]) => true;
   'upload-error': (error: unknown) => true;
   'upload-cancel': (files: File[]) => true;
+  'remote-image-import-start': (images: RemoteImageReference[]) => true;
+  'remote-image-import-complete': (result: RemoteImageImportResult) => true;
+  'remote-image-import-error': (event: { error: unknown; references: RemoteImageReference[]; content: string }) => true;
 };
 
 export const NonoEditor: DefineComponent<NonoEditorProps, {}, {}, {}, {}, {}, {}, NonoEditorEmits>;

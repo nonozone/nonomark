@@ -1,11 +1,13 @@
 {
   "name": "nonomark",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "nonoMark editor monorepo.",
   "type": "module",
   "license": "MIT",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "playground": "vite --config apps/playground/vite.config.js --host 127.0.0.1 --port 4173",
@@ -17,14 +19,14 @@
     "check": "npm test && npm run typecheck && npm run build && npm run build:playground"
   },
   "devDependencies": {
-    "@tiptap/core": "3.29.0",
-    "@tiptap/extension-image": "3.29.0",
-    "@tiptap/extension-table": "3.29.0",
-    "@tiptap/markdown": "3.29.0",
+    "@tiptap/core": "3.29.2",
+    "@tiptap/extension-image": "3.29.2",
+    "@tiptap/extension-table": "3.29.2",
+    "@tiptap/markdown": "3.29.2",
+    "@tiptap/react": "3.29.2",
+    "@tiptap/starter-kit": "3.29.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "@tiptap/react": "3.29.0",
-    "@tiptap/starter-kit": "3.29.0",
     "@vitejs/plugin-react": "^5.0.4",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vue/test-utils": "^2.4.11",
@@ -36,5 +38,7 @@
     "vitest": "^4.1.10",
     "vue": "^3.5.39"
   },
-  "engines": { "node": ">=20.19.0" }
+  "engines": {
+    "node": ">=20.19.0"
+  }
 }

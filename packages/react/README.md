@@ -8,3 +8,5 @@ import '@nonoim/editor-react/style.css';
 
 <NonoEditor value={markdown} onChange={setMarkdown} />
 ```
+
+Use `importRemoteImages={importRemoteImages}` to let the host import `http`/`https` images found in the current Markdown or HTML paste. Successful assets should return the input reference `id`; storage and download security remain host responsibilities.

@@ -94,6 +94,51 @@ describe('NonoEditor integration', () => {
     expect(uploadImages).toHaveBeenCalledTimes(1);
   });
 
+  it('imports remote Markdown images from the current visual paste only', async () => {
+    let receivedContext;
+    const importRemoteImages = vi.fn(async (images, context) => {
+      receivedContext = context;
+      return [{ id: images[0].id, url: 'https://cdn.example/imported.jpg' }];
+    });
+    const wrapper = await mountEditor({ importRemoteImages });
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'clipboardData', { value: {
+      files: [],
+      getData: (type) => type === 'text/plain' ? '![Cover](https://origin.example/cover.jpg "Title")' : '',
+    } });
+
+    wrapper.find('[contenteditable]').element.dispatchEvent(event);
+    await flushPromises();
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(importRemoteImages).toHaveBeenCalledWith([
+      expect.objectContaining({ url: 'https://origin.example/cover.jpg', alt: 'Cover', title: 'Title' }),
+    ], expect.any(Function));
+    expect(receivedContext.signal).toBeInstanceOf(AbortSignal);
+    expect(wrapper.emitted('update:modelValue').at(-1)[0]).toContain('https://cdn.example/imported.jpg');
+    expect(wrapper.emitted('remote-image-import-complete')).toHaveLength(1);
+  });
+
+  it('imports remote images at the current source selection', async () => {
+    const importRemoteImages = vi.fn(async (images) => [{ id: images[0].id, url: 'https://cdn.example/source.jpg' }]);
+    const wrapper = await mountEditor({ modelValue: '- [ ] protected\n', importRemoteImages });
+    const source = wrapper.find('textarea.nono-rich-editor__source');
+    source.element.setSelectionRange(source.element.value.length, source.element.value.length);
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'clipboardData', { value: {
+      files: [],
+      getData: (type) => type === 'text/plain' ? '![Source](https://origin.example/source.jpg)' : '',
+    } });
+
+    source.element.dispatchEvent(event);
+    await flushPromises();
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(wrapper.emitted('update:modelValue').at(-1)).toEqual([
+      '- [ ] protected\n![Source](https://cdn.example/source.jpg)',
+    ]);
+  });
+
   it('renders embedded images only when explicitly enabled', async () => {
     const source = '![pixel](data:image/png;base64,iVBORw0KGgo=)';
     const wrapper = await mountEditor({ modelValue: source, allowBase64Images: true });

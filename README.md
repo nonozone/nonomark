@@ -102,11 +102,14 @@ Payloads must be JSON-serializable. Image `File` objects are intentionally not s
 | `allowBase64Images` | `boolean` | `false` | Allow embedded data-URL images; intended for local/offline documents |
 | `locale` | `string` | `'en'` | Built-in English or `zh-*` interface copy |
 | `help` | `string` | `''` | Help text below the editor |
-| `uploadImages` | `UploadImages \| null` | `null` | Host-provided image upload function |
+| `uploadImages` | `UploadImages \| null` | `null` | Host-provided local-file upload function |
+| `importRemoteImages` | `ImportRemoteImages \| null` | `null` | Host-provided remote-image import function used only during paste |
 | `imageAccept` | `string` | common web images | Accepted MIME types |
 | `maxImageSize` | `number` | `10 MiB` | Client-side size limit per image |
 
 Events: `update:modelValue`, `warning`, `upload-complete`, `upload-error`, and `upload-cancel`.
+
+Remote-image events: `remote-image-import-start`, `remote-image-import-complete`, and `remote-image-import-error`.
 
 Named slots: `toolbar-end` adds host-specific actions to the end of the formatting toolbar, and `footer-status` adds a compact host status beside the Markdown mode indicator.
 
@@ -186,6 +189,26 @@ Because Base64 increases document size, it is intended for offline or small loca
 The previous callable progress parameter remains compatible: `uploadImages(files, onProgress)` implementations continue to work. New providers should use `{ signal, onProgress }`, emit `percentage` rather than the deprecated `progress` alias, and treat `AbortError` as cancellation.
 
 The host must still validate file content, authorization and size on the server. Browser validation is only a usability check.
+
+### Importing remote images from pasted content
+
+When `importRemoteImages` is provided, both adapters inspect only the current paste payload for Markdown images and HTML `<img>` elements whose source uses `http` or `https`. Code spans, fenced code blocks, data URLs, blob URLs and relative paths are ignored. The editor sends the references to the host and replaces only successfully imported URLs, preserving the original `alt`, `title` and surrounding Markdown or HTML.
+
+```ts
+const importRemoteImages: ImportRemoteImages = async (images, { signal }) => {
+  const response = await fetch('/api/images/import', {
+    method: 'POST',
+    credentials: 'include',
+    signal,
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ images }),
+  });
+  if (!response.ok) throw new Error(`Unable to import images (${response.status}).`);
+  return response.json();
+};
+```
+
+Return assets with the input reference `id` and the new `url`. Keeping the `id` is required when a batch can partially succeed; missing results retain their original URL. If the whole callback rejects, the editor inserts the original pasted content and emits the error event. The callback receives a standard `AbortSignal`, while authentication, remote downloading, SSRF protection, size and MIME validation, storage selection, and cleanup remain entirely host responsibilities.
 
 ## Markdown compatibility
 

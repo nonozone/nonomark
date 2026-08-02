@@ -5,7 +5,7 @@ import Image from '@tiptap/extension-image';
 import { TableKit } from '@tiptap/extension-table';
 import { Markdown } from '@tiptap/markdown';
 import { Placeholder } from '@tiptap/extensions';
-import { findUnsupportedMarkdown, requiresSourceMode } from '@nonoim/editor-core';
+import { findRemoteImageReferences, findUnsupportedMarkdown, importRemoteImagesFromContent, requiresSourceMode } from '@nonoim/editor-core';
 
 const DEFAULT_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml';
 const cx = (...values) => values.filter(Boolean).join(' ');
@@ -13,9 +13,10 @@ const cx = (...values) => values.filter(Boolean).join(' ');
 export function NonoEditor({
   value = '', onChange = () => {}, placeholder = '', rows = 10, help = '', fill = false,
   disabled = false, readOnly = false, autoFocus = false, allowBase64Images = false,
-  locale = 'en', uploadImages = null, imageAccept = DEFAULT_IMAGE_ACCEPT,
+  locale = 'en', uploadImages = null, importRemoteImages = null, imageAccept = DEFAULT_IMAGE_ACCEPT,
   maxImageSize = 10 * 1024 * 1024, onWarning = () => {}, onUploadComplete = () => {},
-  onUploadError = () => {}, onUploadCancel = () => {}, toolbarEnd = null, footerStatus = null,
+  onUploadError = () => {}, onUploadCancel = () => {}, onRemoteImageImportStart = () => {},
+  onRemoteImageImportComplete = () => {}, onRemoteImageImportError = () => {}, toolbarEnd = null, footerStatus = null,
 }) {
   const tr = useCallback((en, zh, vars) => {
     let text = /^zh(?:-|$)/i.test(locale) ? (zh || en) : en;
@@ -34,10 +35,13 @@ export function NonoEditor({
   const sourceValueRef = useRef(sourceValue);
   const editorRef = useRef(null);
   const uploadController = useRef(null);
+  const remoteImportController = useRef(null);
   const uploadingFiles = useRef([]);
   const lastPublished = useRef(null);
-  const callbacks = useRef({ onChange, onUploadComplete, onUploadError, onUploadCancel });
-  callbacks.current = { onChange, onUploadComplete, onUploadError, onUploadCancel };
+  const callbacks = useRef({ onChange, onUploadComplete, onUploadError, onUploadCancel, onRemoteImageImportStart, onRemoteImageImportComplete, onRemoteImageImportError });
+  callbacks.current = { onChange, onUploadComplete, onUploadError, onUploadCancel, onRemoteImageImportStart, onRemoteImageImportComplete, onRemoteImageImportError };
+  const remoteImporter = useRef(importRemoteImages);
+  remoteImporter.current = importRemoteImages;
 
   const publish = useCallback((markdown) => {
     sourceValueRef.current = markdown;
@@ -108,6 +112,35 @@ export function NonoEditor({
     }
   }, [editable, imageAccept, insertImages, maxImageSize, tr, uploadImages]);
 
+  const remotePastePayload = (clipboardData) => {
+    if (!clipboardData) return null;
+    const candidates = [['markdown', clipboardData.getData?.('text/markdown')], ['markdown', clipboardData.getData?.('text/plain')], ['html', clipboardData.getData?.('text/html')]];
+    for (const [format, content] of candidates) if (content && findRemoteImageReferences(content, { format }).length) return { content, format };
+    return null;
+  };
+  const handleRemotePaste = useCallback((event, insert) => {
+    if (!remoteImporter.current || !editable || remoteImportController.current) return false;
+    const payload = remotePastePayload(event.clipboardData);
+    if (!payload) return false;
+    const references = findRemoteImageReferences(payload.content, { format: payload.format });
+    const controller = new AbortController();
+    const report = () => {};
+    Object.assign(report, { signal: controller.signal, onProgress: report });
+    remoteImportController.current = controller;
+    event.preventDefault();
+    callbacks.current.onRemoteImageImportStart(references);
+    void importRemoteImagesFromContent(payload.content, remoteImporter.current, report, { format: payload.format }).then((result) => {
+      if (controller.signal.aborted) return;
+      insert(result.content, payload.format);
+      callbacks.current.onRemoteImageImportComplete(result);
+    }).catch((error) => {
+      if (controller.signal.aborted) return;
+      insert(payload.content, payload.format);
+      callbacks.current.onRemoteImageImportError({ error, references, content: payload.content });
+    }).finally(() => { if (remoteImportController.current === controller) remoteImportController.current = null; });
+    return true;
+  }, [editable]);
+
   const editor = useEditor({
     immediatelyRender: false,
     editable,
@@ -116,14 +149,14 @@ export function NonoEditor({
     contentType: 'markdown',
     editorProps: {
       attributes: { class: 'nono-rich-editor__prosemirror', 'aria-label': placeholder || tr('Rich text editor', '富文本编辑器') },
-      handlePaste: (_view, event) => { const files = event.clipboardData?.files; if (!files?.length) return false; void uploadFiles(files); return true; },
+      handlePaste: (view, event) => { const files = event.clipboardData?.files; if (files?.length) { void uploadFiles(files); return true; } const range = { from: view.state.selection.from, to: view.state.selection.to }; return handleRemotePaste(event, (content, format) => editorRef.current?.commands.insertContentAt(range, content, { contentType: format })); },
       handleDrop: (_view, event) => { const files = event.dataTransfer?.files; if (!files?.length) return false; void uploadFiles(files); return true; },
     },
     onUpdate: ({ editor: instance }) => { publish(instance.getMarkdown()); setRevision((count) => count + 1); },
     onSelectionUpdate: () => setRevision((count) => count + 1),
     onFocus: () => setFocused(true),
     onBlur: () => setFocused(false),
-  }, [allowBase64Images]);
+  }, [allowBase64Images, handleRemotePaste]);
   editorRef.current = editor;
 
   useEffect(() => { editor?.setEditable(editable); }, [editable, editor]);
@@ -135,7 +168,7 @@ export function NonoEditor({
     else if (!sourceMode) editor.commands.setContent(value || '', { contentType: 'markdown', emitUpdate: false });
   }, [editor, sourceMode, value]);
   useEffect(() => { if (autoFocus && !disabled) editor?.commands.focus(); }, [autoFocus, disabled, editor]);
-  useEffect(() => () => uploadController.current?.abort(), []);
+  useEffect(() => () => { uploadController.current?.abort(); remoteImportController.current?.abort(); }, []);
 
   const active = (name, attrs) => { void revision; return !sourceMode && Boolean(editor?.isActive(name, attrs)); };
   const sourceRange = () => ({ start: sourceRef.current?.selectionStart ?? sourceValueRef.current.length, end: sourceRef.current?.selectionEnd ?? sourceValueRef.current.length });
@@ -173,7 +206,7 @@ export function NonoEditor({
       </div>}
       {protectedFeatures.length > 0 && <div className="nono-rich-editor__notice" role="status">{tr('This content stays in source mode to prevent formatting loss.', '此内容包含暂不支持的语法。为避免格式丢失，已保留在源码模式。')}</div>}
       {uploadStatus && <div className="nono-rich-editor__upload-status"><div><strong>{uploadStatus.name}</strong><span className="nono-rich-editor__upload-summary"><span className={`is-${uploadStatus.status}`}>{uploadStatus.status === 'uploading' ? `${uploadStatus.progress}%` : uploadStatus.status}</span>{uploadStatus.status === 'uploading' && <button type="button" title={tr('Cancel upload', '取消上传')} onClick={cancelUpload}>{tr('Cancel', '取消')}</button>}</span></div><div className="nono-rich-editor__progress"><i className={`is-${uploadStatus.status}`} style={{ width: `${uploadStatus.progress}%` }} /></div>{uploadStatus.error && <p>{uploadStatus.error}</p>}</div>}
-      {sourceMode ? <textarea ref={sourceRef} value={sourceValue} disabled={disabled} readOnly={readOnly} placeholder={placeholder} className="nono-rich-editor__source" style={{ '--nono-editor-min-height': minHeight }} spellCheck="false" onChange={(event) => publish(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} /> : <EditorContent editor={editor} className="nono-rich-editor__content" style={{ '--nono-editor-min-height': minHeight }} />}
+      {sourceMode ? <textarea ref={sourceRef} value={sourceValue} disabled={disabled} readOnly={readOnly} placeholder={placeholder} className="nono-rich-editor__source" style={{ '--nono-editor-min-height': minHeight }} spellCheck="false" onChange={(event) => publish(event.target.value)} onPaste={(event) => { const files = event.clipboardData?.files; if (files?.length) { event.preventDefault(); void uploadFiles(files); return; } const { start, end } = sourceRange(); handleRemotePaste(event, (content) => replaceRange(start, end, content)); }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} /> : <EditorContent editor={editor} className="nono-rich-editor__content" style={{ '--nono-editor-min-height': minHeight }} />}
       {editor && <div className="nono-rich-editor__footer"><span>{tr('{count} characters', '{count} 个字符', { count: characterCount })}</span><span className="nono-rich-editor__footer-meta">{footerStatus}<span>{sourceMode ? tr('Markdown source', 'Markdown 源码') : tr('Markdown compatible', '兼容 Markdown')}</span></span></div>}
     </div>{help && <p className="nono-rich-editor__help">{help}</p>}
   </div>;
