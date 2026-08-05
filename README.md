@@ -117,6 +117,8 @@ Named slots: `toolbar-end` adds host-specific actions to the end of the formatti
 
 `uploadImages` is a storage-provider-neutral contract. Selecting, pasting or dropping images uses the same function, and only one batch runs at a time. Resolve to assets with at least a stable `url`; optional `provider`, `key`, MIME and size metadata is preserved in upload events for host-side migration or bookkeeping.
 
+In visual mode, click an image to select it. The selected image receives a visible outline and can be removed with `Delete` or `Backspace`.
+
 ```ts
 type UploadImages = (
   files: File[],

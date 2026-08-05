@@ -63,6 +63,21 @@ describe('React NonoEditor', () => {
     expect(onUploadComplete).toHaveBeenCalledTimes(1);
   });
 
+  it('selects an image by mouse and deletes the selected node', async () => {
+    const onChange = vi.fn();
+    const container = await renderEditor({ value: 'Before\n\n![photo](https://example.com/photo.jpg)\n\nAfter', onChange });
+    const image = container.querySelector('.nono-rich-editor__content img');
+    const emptyRect = { top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) };
+    Object.defineProperty(Range.prototype, 'getClientRects', { configurable: true, value: () => [] });
+    Object.defineProperty(Range.prototype, 'getBoundingClientRect', { configurable: true, value: () => emptyRect });
+
+    await act(async () => image.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 })));
+    expect(image.classList.contains('ProseMirror-selectednode')).toBe(true);
+
+    await act(async () => container.querySelector('[contenteditable]').dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Delete', code: 'Delete' })));
+    expect(onChange).toHaveBeenLastCalledWith(expect.not.stringContaining('photo.jpg'));
+  });
+
   it('imports remote Markdown images from a visual paste', async () => {
     const onChange = vi.fn();
     const onRemoteImageImportComplete = vi.fn();

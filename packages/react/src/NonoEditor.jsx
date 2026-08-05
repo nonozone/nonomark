@@ -4,11 +4,13 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { TableKit } from '@tiptap/extension-table';
 import { Markdown } from '@tiptap/markdown';
+import { NodeSelection } from '@tiptap/pm/state';
 import { Placeholder } from '@tiptap/extensions';
 import { findRemoteImageReferences, findUnsupportedMarkdown, importRemoteImagesFromContent, requiresSourceMode } from '@nonoim/editor-core';
 
 const DEFAULT_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml';
 const cx = (...values) => values.filter(Boolean).join(' ');
+const selectImageOnMouseDown = (view, event) => { const target = event.target; if (target?.tagName !== 'IMG' || !view.editable) return false; const position = view.posAtDOM(target, 0); if (view.state.doc.nodeAt(position)?.type.name !== 'image') return false; view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, position))); view.focus(); event.preventDefault(); return true; };
 
 export function NonoEditor({
   value = '', onChange = () => {}, placeholder = '', rows = 10, help = '', fill = false,
@@ -149,6 +151,7 @@ export function NonoEditor({
     contentType: 'markdown',
     editorProps: {
       attributes: { class: 'nono-rich-editor__prosemirror', 'aria-label': placeholder || tr('Rich text editor', '富文本编辑器') },
+      handleDOMEvents: { mousedown: selectImageOnMouseDown },
       handlePaste: (view, event) => { const files = event.clipboardData?.files; if (files?.length) { void uploadFiles(files); return true; } const range = { from: view.state.selection.from, to: view.state.selection.to }; return handleRemotePaste(event, (content, format) => editorRef.current?.commands.insertContentAt(range, content, { contentType: format })); },
       handleDrop: (_view, event) => { const files = event.dataTransfer?.files; if (!files?.length) return false; void uploadFiles(files); return true; },
     },

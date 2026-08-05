@@ -21,6 +21,14 @@
 .nono-rich-editor__upload-summary button { min-height: 26px; border: 1px solid var(--nono-editor-border); border-radius: 6px; background: #fff; padding: 0 8px; color: var(--nono-editor-muted); cursor: pointer; font-size: 11px; }
 .nono-rich-editor__upload-summary button:hover { color: #dc2626; }
 .nono-rich-editor__upload-status .is-cancelled { color: var(--nono-editor-muted); }
+.nono-rich-editor__content img { cursor: pointer; }
+.nono-rich-editor__content img.ProseMirror-selectednode {
+  outline: 3px solid var(--nono-editor-primary);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--nono-editor-primary) 12%, transparent);
+}
+.nono-rich-editor.is-readonly .nono-rich-editor__content img,
+.nono-rich-editor.is-disabled .nono-rich-editor__content img { cursor: default; }
 .nono-rich-editor.is-readonly .nono-rich-editor__content,
 .nono-rich-editor.is-disabled .nono-rich-editor__content,
 .nono-rich-editor textarea:read-only,

@@ -145,6 +145,19 @@ describe('NonoEditor integration', () => {
     expect(wrapper.find('img').attributes('src')).toBe('data:image/png;base64,iVBORw0KGgo=');
   });
 
+  it('selects an image by mouse and deletes the selected node', async () => {
+    const wrapper = await mountEditor({ modelValue: 'Before\n\n![photo](https://example.com/photo.jpg)\n\nAfter' });
+    const image = wrapper.find('.nono-rich-editor__content img');
+
+    await image.trigger('mousedown', { clientX: 10, clientY: 10, button: 0 });
+    await nextTick();
+
+    expect(image.classes()).toContain('ProseMirror-selectednode');
+    await wrapper.find('[contenteditable]').trigger('keydown', { key: 'Delete', code: 'Delete' });
+    await nextTick();
+    expect(wrapper.emitted('update:modelValue').at(-1)[0]).not.toContain('photo.jpg');
+  });
+
   it('keeps formatting tools usable in Markdown source mode', async () => {
     const wrapper = await mountEditor({ modelValue: '- [ ] protected' });
     const source = wrapper.find('textarea.nono-rich-editor__source');

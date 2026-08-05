@@ -51,3 +51,9 @@ test('core entry is framework independent and exposes both upload providers', as
   assert.equal(typeof core.requiresSourceMode, 'function');
   assert.equal(typeof s3.createS3ImageUploader, 'function');
 });
+
+test('shared editor styles visibly mark a selected image node', () => {
+  const styles = readFileSync(new URL('../packages/vue/src/interaction.css', import.meta.url), 'utf8');
+  assert.match(styles, /img\.ProseMirror-selectednode\s*\{/);
+  assert.match(styles, /outline:\s*3px solid var\(--nono-editor-primary\)/);
+});
