@@ -56,6 +56,34 @@ export function ArticleEditor() {
 
 React uses `value`/`onChange`; Vue uses `v-model`. Both adapters share Markdown protection and the same `uploadImages` contract.
 
+## Faster first render
+
+The default package entry keeps its existing eager behavior. Admin screens that should render before Tiptap and ProseMirror finish loading can use the optional lazy entry instead:
+
+```vue
+<script setup>
+import { NonoLazyEditor, preloadNonoEditor } from '@nonoim/editor-vue/lazy';
+import '@nonoim/editor-vue/style.css';
+
+// Optional: call from a route hover, navigation intent, or idle callback.
+const warmEditor = () => preloadNonoEditor();
+</script>
+
+<template>
+  <NonoLazyEditor v-model="content" locale="zh" />
+</template>
+```
+
+```jsx
+import { NonoLazyEditor, preloadNonoEditor } from '@nonoim/editor-react/lazy';
+import '@nonoim/editor-react/style.css';
+
+preloadNonoEditor();
+<NonoLazyEditor value={content} onChange={setContent} />;
+```
+
+The lazy entry is under 2 KB before compression and has no static Tiptap import. It immediately renders a controlled Markdown textarea, so the host form can mount and remain editable on a slow connection. The full visual editor loads in a separate async chunk and replaces the fallback without changing the host value. This changes the critical loading path; it does not pretend that the full Tiptap runtime has disappeared.
+
 ## Recovery backups
 
 Recovery backups are independent from the Markdown component. One controller owns one stable `backupKey` and can store the complete host form, including titles, summaries, taxonomy and SEO fields alongside Markdown.

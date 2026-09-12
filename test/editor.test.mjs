@@ -70,3 +70,10 @@ test('raw HTML remains detectable', () => {
   assert.equal(containsRawHtml('<section>Keep</section>'), true);
   assert.equal(containsRawHtml('**Markdown**'), false);
 });
+
+test('rich editor adapters explicitly keep TipTap input rules enabled', () => {
+  const vue = read('../packages/vue/src/NonoEditor.vue');
+  const react = read('../packages/react/src/NonoEditor.jsx');
+  assert.match(vue, /new Editor\(\{ editable: editable\.value, enableInputRules: true,/);
+  assert.match(react, /editable,\n\s+enableInputRules: true,/);
+});

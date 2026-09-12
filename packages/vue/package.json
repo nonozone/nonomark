@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor-vue",
-  "version": "0.5.1",
+  "version": "0.6.1",
   "description": "The official Vue 3 adapter for nonoMark.",
   "type": "module",
   "license": "MIT",
@@ -12,6 +12,7 @@
   "files": [
     "dist",
     "src/index.d.ts",
+    "src/lazy.d.ts",
     "README.md"
   ],
   "main": "./dist/editor-vue.cjs",
@@ -23,10 +24,15 @@
       "import": "./dist/editor-vue.js",
       "require": "./dist/editor-vue.cjs"
     },
+    "./lazy": {
+      "types": "./src/lazy.d.ts",
+      "import": "./dist/lazy.js",
+      "require": "./dist/lazy.cjs"
+    },
     "./style.css": "./dist/editor-vue.css"
   },
   "dependencies": {
-    "@nonoim/editor-core": "0.5.1",
+    "@nonoim/editor-core": "0.6.1",
     "@tiptap/core": "3.29.2",
     "@tiptap/extension-image": "3.29.2",
     "@tiptap/extension-table": "3.29.2",

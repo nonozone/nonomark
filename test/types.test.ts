@@ -18,6 +18,9 @@ import {
   NonoEditor as ReactNonoEditor,
   type NonoEditorProps as ReactNonoEditorProps,
 } from '@nonoim/editor-react';
+import { NonoLazyEditor, preloadNonoEditor as preloadVueEditor } from '@nonoim/editor-vue/lazy';
+import { NonoLazyEditor as ReactNonoLazyEditor, preloadNonoEditor as preloadReactEditor } from '@nonoim/editor-react/lazy';
+import { NonoLazyEditor as CompatNonoLazyEditor } from '@nonoim/editor/lazy';
 
 const standardUpload: UploadImages = async (files, { signal, onProgress }) => {
   if (signal.aborted) return [];
@@ -58,6 +61,8 @@ const s3Upload: UploadImages = createS3ImageUploader({
 const assets: EditorImage[] = [{ url: 'data:image/png;base64,AAAA', provider: 'local-data-url', size: 4 }];
 const remoteImport: ImportRemoteImages = async (images, { signal }) => signal.aborted ? [] : images.map((image) => ({ id: image.id, sourceUrl: image.url, url: `https://cdn.example/${image.id}.webp` }));
 const reactProps: ReactNonoEditorProps = { value: '# React', onChange: (value) => value.length, uploadImages: standardUpload, importRemoteImages: remoteImport };
+const lazyProps: InstanceType<typeof NonoLazyEditor>['$props'] = { modelValue: '# Lazy Vue', rows: 12 };
+const reactLazyEditor = ReactNonoLazyEditor({ ...reactProps, fallback: null });
 type ArticleBackup = { title: string; markdown: string };
 const backupStorage = new Map<string, string>();
 const editorBackup: EditorBackupController<ArticleBackup> = createEditorBackup<ArticleBackup>({
@@ -69,4 +74,6 @@ const editorBackup: EditorBackupController<ArticleBackup> = createEditorBackup<A
   },
 });
 editorBackup.schedule({ title: 'Typed', markdown: '# Typed' });
-void [publicProps, features, legacyUpload, localUpload, s3Upload, assets, ReactNonoEditor, reactProps, editorBackup];
+void preloadVueEditor();
+void preloadReactEditor();
+void [publicProps, features, legacyUpload, localUpload, s3Upload, assets, ReactNonoEditor, reactProps, lazyProps, reactLazyEditor, CompatNonoLazyEditor, editorBackup];

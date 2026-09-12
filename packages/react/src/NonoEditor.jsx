@@ -146,6 +146,7 @@ export function NonoEditor({
   const editor = useEditor({
     immediatelyRender: false,
     editable,
+    enableInputRules: true,
     extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }), Image.configure({ allowBase64: allowBase64Images }), TableKit, Placeholder.configure({ placeholder: placeholder || tr('Start writing...', '开始输入正文…') }), Markdown],
     content: value || '',
     contentType: 'markdown',

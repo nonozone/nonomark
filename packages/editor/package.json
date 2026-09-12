@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor",
-  "version": "0.5.1",
+  "version": "0.6.1",
   "description": "Compatibility package for the nonoMark Vue editor. New Vue projects should use @nonoim/editor-vue.",
   "type": "module",
   "license": "MIT",
@@ -12,6 +12,7 @@
   "files": [
     "dist",
     "src/index.d.ts",
+    "src/lazy.d.ts",
     "src/uploadS3.d.ts",
     "README.md"
   ],
@@ -24,6 +25,11 @@
       "import": "./dist/editor.js",
       "require": "./dist/editor.cjs"
     },
+    "./lazy": {
+      "types": "./src/lazy.d.ts",
+      "import": "./dist/lazy.js",
+      "require": "./dist/lazy.cjs"
+    },
     "./upload-s3": {
       "types": "./src/uploadS3.d.ts",
       "import": "./dist/upload-s3.js",
@@ -32,8 +38,8 @@
     "./style.css": "./dist/editor.css"
   },
   "dependencies": {
-    "@nonoim/editor-core": "0.5.1",
-    "@nonoim/editor-vue": "0.5.1"
+    "@nonoim/editor-core": "0.6.1",
+    "@nonoim/editor-vue": "0.6.1"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

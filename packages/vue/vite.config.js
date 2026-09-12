@@ -5,10 +5,10 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     lib: {
-      entry: 'src/index.js',
+      entry: { 'editor-vue': 'src/index.js', lazy: 'src/lazy.js' },
       name: 'NonoEditorVue',
       formats: ['es', 'cjs'],
-      fileName: (format) => `editor-vue.${format === 'es' ? 'js' : 'cjs'}`,
+      fileName: (format, name) => `${name}.${format === 'es' ? 'js' : 'cjs'}`,
       cssFileName: 'editor-vue',
     },
     rollupOptions: {
