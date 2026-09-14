@@ -16,11 +16,16 @@ afterEach(() => {
 });
 
 describe('NonoEditor integration', () => {
+  it('keeps convertible pasted HTML in visual mode by default', async () => {
+    const wrapper = await mountEditor({ modelValue: '<p>Hello <strong>world</strong></p><p>Next line<br>here</p>' });
+    expect(wrapper.find('[contenteditable]').exists()).toBe(true);
+    expect(wrapper.find('textarea.nono-rich-editor__source').exists()).toBe(false);
+  });
   it('honors readonly and disabled in both editor modes', async () => {
     const readonlyEditor = await mountEditor({ modelValue: '**read only**', readonly: true });
     expect(readonlyEditor.find('[contenteditable]').attributes('contenteditable')).toBe('false');
 
-    const disabledEditor = await mountEditor({ modelValue: '- [ ] protected', disabled: true });
+    const disabledEditor = await mountEditor({ modelValue: '- [ ] protected', autoSourceMode: true, disabled: true });
     expect(disabledEditor.find('textarea.nono-rich-editor__source').attributes()).toHaveProperty('disabled');
   });
 
@@ -121,7 +126,7 @@ describe('NonoEditor integration', () => {
 
   it('imports remote images at the current source selection', async () => {
     const importRemoteImages = vi.fn(async (images) => [{ id: images[0].id, url: 'https://cdn.example/source.jpg' }]);
-    const wrapper = await mountEditor({ modelValue: '- [ ] protected\n', importRemoteImages });
+    const wrapper = await mountEditor({ modelValue: '- [ ] protected\n', autoSourceMode: true, importRemoteImages });
     const source = wrapper.find('textarea.nono-rich-editor__source');
     source.element.setSelectionRange(source.element.value.length, source.element.value.length);
     const event = new Event('paste', { bubbles: true, cancelable: true });
@@ -159,7 +164,7 @@ describe('NonoEditor integration', () => {
   });
 
   it('keeps formatting tools usable in Markdown source mode', async () => {
-    const wrapper = await mountEditor({ modelValue: '- [ ] protected' });
+    const wrapper = await mountEditor({ modelValue: '- [ ] protected', autoSourceMode: true });
     const source = wrapper.find('textarea.nono-rich-editor__source');
     source.element.setSelectionRange(6, 15);
 

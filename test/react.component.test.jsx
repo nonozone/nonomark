@@ -27,7 +27,7 @@ afterEach(async () => {
 describe('React NonoEditor', () => {
   it('protects unsupported Markdown in source mode and keeps formatting available', async () => {
     const onChange = vi.fn();
-    const container = await renderEditor({ value: '- [ ] protected', onChange, locale: 'zh' });
+    const container = await renderEditor({ value: '- [ ] protected', autoSourceMode: true, onChange, locale: 'zh' });
     const source = container.querySelector('textarea.nono-rich-editor__source');
     expect(source).not.toBeNull();
     source.setSelectionRange(6, 15);
@@ -104,7 +104,7 @@ describe('React NonoEditor', () => {
     const importRemoteImages = vi.fn(async (images) => [
       { id: images[0].id, url: 'https://cdn.example/source.jpg' },
     ]);
-    const container = await renderEditor({ value: '- [ ] protected\n', importRemoteImages, onChange });
+    const container = await renderEditor({ value: '- [ ] protected\n', autoSourceMode: true, importRemoteImages, onChange });
     const source = container.querySelector('textarea.nono-rich-editor__source');
     source.setSelectionRange(source.value.length, source.value.length);
     const event = new Event('paste', { bubbles: true, cancelable: true });
