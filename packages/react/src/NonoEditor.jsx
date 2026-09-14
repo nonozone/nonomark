@@ -16,7 +16,7 @@ export function NonoEditor({
   value = '', onChange = () => {}, placeholder = '', rows = 10, help = '', fill = false,
   disabled = false, readOnly = false, autoFocus = false, allowBase64Images = false,
   locale = 'en', uploadImages = null, importRemoteImages = null, imageAccept = DEFAULT_IMAGE_ACCEPT,
-  maxImageSize = 10 * 1024 * 1024, onWarning = () => {}, onUploadComplete = () => {},
+  maxImageSize = 10 * 1024 * 1024, autoSourceMode = false, onWarning = () => {}, onUploadComplete = () => {},
   onUploadError = () => {}, onUploadCancel = () => {}, onRemoteImageImportStart = () => {},
   onRemoteImageImportComplete = () => {}, onRemoteImageImportError = () => {}, toolbarEnd = null, footerStatus = null,
 }) {
@@ -25,7 +25,7 @@ export function NonoEditor({
     return vars ? text.replace(/\{(\w+)\}/g, (_match, key) => vars[key] == null ? '' : String(vars[key])) : text;
   }, [locale]);
   const editable = !disabled && !readOnly;
-  const [sourceMode, setSourceMode] = useState(() => requiresSourceMode(value));
+  const [sourceMode, setSourceMode] = useState(() => autoSourceMode && requiresSourceMode(value));
   const [sourceValue, setSourceValue] = useState(value || '');
   const [focused, setFocused] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -168,9 +168,9 @@ export function NonoEditor({
     if (!editor || value === lastPublished.current) return;
     sourceValueRef.current = value || '';
     setSourceValue(value || '');
-    if (requiresSourceMode(value)) setSourceMode(true);
+    if (autoSourceMode && requiresSourceMode(value)) setSourceMode(true);
     else if (!sourceMode) editor.commands.setContent(value || '', { contentType: 'markdown', emitUpdate: false });
-  }, [editor, sourceMode, value]);
+  }, [autoSourceMode, editor, sourceMode, value]);
   useEffect(() => { if (autoFocus && !disabled) editor?.commands.focus(); }, [autoFocus, disabled, editor]);
   useEffect(() => () => { uploadController.current?.abort(); remoteImportController.current?.abort(); }, []);
 
