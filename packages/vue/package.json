@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor-vue",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "The official Vue 3 adapter for nonoMark.",
   "type": "module",
   "license": "MIT",
@@ -32,7 +32,7 @@
     "./style.css": "./dist/editor-vue.css"
   },
   "dependencies": {
-    "@nonoim/editor-core": "0.6.1",
+    "@nonoim/editor-core": "0.6.2",
     "@tiptap/core": "3.29.2",
     "@tiptap/extension-image": "3.29.2",
     "@tiptap/extension-table": "3.29.2",
