@@ -17,7 +17,7 @@ import { NonoLazyEditor, preloadNonoEditor } from '@nonoim/editor-vue/lazy';
 
 `NonoLazyEditor` accepts the same props and `v-model`. It shows an editable Markdown textarea while loading the full editor. Call `preloadNonoEditor()` on route intent, menu hover, or during browser idle time to warm the async chunk before navigation.
 
-The toolbar includes a `Gallery` button by default. It inserts a standard GFM table with an image row and a caption row:
+The toolbar includes a `Gallery` button by default. It inserts one standard Markdown image per line. The caption is used as the image `alt` text, so the result stays portable in plain text:
 
 ```vue
 <NonoEditor

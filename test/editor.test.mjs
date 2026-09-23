@@ -11,6 +11,7 @@ import {
   findUnsupportedMarkdown,
   requiresSourceMode,
 } from '../packages/core/src/markdownCompatibility.js';
+import { buildGalleryMarkdown } from '../packages/vue/src/gallery.js';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const makeEditor = (content) => new Editor({
@@ -69,6 +70,18 @@ test('lossy Markdown features require source mode', () => {
 test('raw HTML remains detectable', () => {
   assert.equal(containsRawHtml('<section>Keep</section>'), true);
   assert.equal(containsRawHtml('**Markdown**'), false);
+});
+
+test('gallery output is plain Markdown image lines', () => {
+  assert.equal(
+    buildGalleryMarkdown([
+      { url: 'https://example.com/one.jpg', caption: 'First image' },
+      { url: 'https://example.com/two.jpg', alt: 'Two' },
+      { url: 'https://example.com/three.jpg', caption: 'Third image' },
+    ]),
+    '![First image](https://example.com/one.jpg)\n![Two](https://example.com/two.jpg)\n![Third image](https://example.com/three.jpg)',
+  );
+  assert.throws(() => buildGalleryMarkdown([{ url: 'https://example.com/one.jpg' }]));
 });
 
 test('rich editor adapters explicitly keep TipTap input rules enabled', () => {

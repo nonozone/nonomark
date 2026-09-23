@@ -35,19 +35,18 @@ describe('NonoEditor integration', () => {
     await wrapper.findAll('button').find((button) => button.text().includes('Insert into document')).trigger('click');
 
     const value = wrapper.emitted('update:modelValue').at(-1)[0];
-    expect(value).toContain('| ![One](https://example.com/one.jpg) | ![Two](https://example.com/two.jpg) |');
-    expect(value).toContain('First image');
-    expect(value).toContain('Second image');
+    expect(value).toContain('![First image](https://example.com/one.jpg)\n![Second image](https://example.com/two.jpg)');
+    expect(value).not.toContain('|');
   });
 
-  it('round trips a GFM image header and caption row in visual mode', async () => {
-    const markdown = '| ![Workshop](https://example.com/a.jpg) | ![Machine](https://example.com/b.jpg) |\n| :---: | :---: |\n| Factory floor | Five axis mill |';
+  it('round trips consecutive Markdown image lines in visual mode', async () => {
+    const markdown = '![Workshop](https://example.com/a.jpg)\n![Machine](https://example.com/b.jpg)';
     const wrapper = await mountEditor({ modelValue: markdown });
-    expect(wrapper.findAll('.nono-rich-editor__content th img:not(.ProseMirror-separator)')).toHaveLength(2);
-    expect(wrapper.findAll('.nono-rich-editor__content tr:nth-child(2) td')).toHaveLength(2);
+    expect(wrapper.find('table').exists()).toBe(false);
+    expect(wrapper.findAll('.nono-rich-editor__content img:not(.ProseMirror-separator)')).toHaveLength(2);
     await wrapper.findAll('button').find((button) => button.text().includes('Source')).trigger('click');
     expect(wrapper.find('textarea.nono-rich-editor__source').element.value).toContain('![Workshop](https://example.com/a.jpg)');
-    expect(wrapper.find('textarea.nono-rich-editor__source').element.value).toContain('Factory floor');
+    expect(wrapper.find('textarea.nono-rich-editor__source').element.value).toContain('![Machine](https://example.com/b.jpg)');
   });
   it('keeps convertible pasted HTML in visual mode by default', async () => {
     const wrapper = await mountEditor({ modelValue: '<p>Hello <strong>world</strong></p><p>Next line<br>here</p>' });

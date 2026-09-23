@@ -22,7 +22,7 @@ export interface NonoEditorProps {
   importRemoteImages?: ImportRemoteImages | null;
   imageAccept?: string;
   maxImageSize?: number;
-  /** Show the toolbar button and dialog for inserting 2–4 image GFM tables. */
+  /** Show the toolbar button and dialog for inserting 2–4 image Markdown rows. */
   enableGallery?: boolean;
 }
 

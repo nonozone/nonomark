@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor-core",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Framework-independent Markdown, recovery backup and image upload contracts for nonoMark.",
   "type": "module",
   "license": "MIT",
