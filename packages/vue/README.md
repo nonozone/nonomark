@@ -16,3 +16,19 @@ import { NonoLazyEditor, preloadNonoEditor } from '@nonoim/editor-vue/lazy';
 ```
 
 `NonoLazyEditor` accepts the same props and `v-model`. It shows an editable Markdown textarea while loading the full editor. Call `preloadNonoEditor()` on route intent, menu hover, or during browser idle time to warm the async chunk before navigation.
+
+The toolbar includes a `Gallery` button by default. It inserts a standard GFM table with an image row and a caption row:
+
+```vue
+<NonoEditor
+  v-model="content"
+  :enable-gallery="true"
+  @gallery-pick-image="({ onSelect }) => mediaLibrary.open(onSelect)"
+>
+  <template #gallery-picker="{ onSelect }">
+    <MyMediaLibraryPicker @confirm="onSelect" />
+  </template>
+</NonoEditor>
+```
+
+Users choose 2, 3, or 4 images, reorder them, and edit captions before insertion. `uploadImages` can provide the upload action in the dialog. Set `:enable-gallery="false"` to hide the tool.

@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Compatibility package for the nonoMark Vue editor. New Vue projects should use @nonoim/editor-vue.",
   "type": "module",
   "license": "MIT",
@@ -38,8 +38,8 @@
     "./style.css": "./dist/editor.css"
   },
   "dependencies": {
-    "@nonoim/editor-core": "0.6.2",
-    "@nonoim/editor-vue": "0.6.2"
+    "@nonoim/editor-core": "0.6.3",
+    "@nonoim/editor-vue": "0.6.3"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

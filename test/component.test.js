@@ -16,6 +16,39 @@ afterEach(() => {
 });
 
 describe('NonoEditor integration', () => {
+  it('inserts a two image gallery through the host picker callback', async () => {
+    const wrapper = await mountEditor({ enableGallery: true });
+    await wrapper.find('button[title="Gallery"]').trigger('click');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+
+    const pickerButtons = wrapper.findAll('button').filter((button) => button.text().includes('Choose image'));
+    await pickerButtons[0].trigger('click');
+    const firstPick = wrapper.emitted('gallery-pick-image').at(-1)[0];
+    firstPick.onSelect({ url: 'https://example.com/one.jpg', alt: 'One' });
+    await pickerButtons[1].trigger('click');
+    const secondPick = wrapper.emitted('gallery-pick-image').at(-1)[0];
+    secondPick.onSelect({ url: 'https://example.com/two.jpg', alt: 'Two' });
+
+    const captions = wrapper.findAll('input').filter((input) => input.attributes('placeholder')?.includes('caption'));
+    await captions[0].setValue('First image');
+    await captions[1].setValue('Second image');
+    await wrapper.findAll('button').find((button) => button.text().includes('Insert into document')).trigger('click');
+
+    const value = wrapper.emitted('update:modelValue').at(-1)[0];
+    expect(value).toContain('| ![One](https://example.com/one.jpg) | ![Two](https://example.com/two.jpg) |');
+    expect(value).toContain('First image');
+    expect(value).toContain('Second image');
+  });
+
+  it('round trips a GFM image header and caption row in visual mode', async () => {
+    const markdown = '| ![Workshop](https://example.com/a.jpg) | ![Machine](https://example.com/b.jpg) |\n| :---: | :---: |\n| Factory floor | Five axis mill |';
+    const wrapper = await mountEditor({ modelValue: markdown });
+    expect(wrapper.findAll('.nono-rich-editor__content th img:not(.ProseMirror-separator)')).toHaveLength(2);
+    expect(wrapper.findAll('.nono-rich-editor__content tr:nth-child(2) td')).toHaveLength(2);
+    await wrapper.findAll('button').find((button) => button.text().includes('Source')).trigger('click');
+    expect(wrapper.find('textarea.nono-rich-editor__source').element.value).toContain('![Workshop](https://example.com/a.jpg)');
+    expect(wrapper.find('textarea.nono-rich-editor__source').element.value).toContain('Factory floor');
+  });
   it('keeps convertible pasted HTML in visual mode by default', async () => {
     const wrapper = await mountEditor({ modelValue: '<p>Hello <strong>world</strong></p><p>Next line<br>here</p>' });
     expect(wrapper.find('[contenteditable]').exists()).toBe(true);

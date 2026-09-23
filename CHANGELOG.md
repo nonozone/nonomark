@@ -2,6 +2,12 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.3 - 2026-09-23
+
+- Add the Vue editor gallery tool for inserting 2–4 image GFM tables with captions.
+- Add host media-library callbacks, picker slots, image upload support, ordering controls and visual gallery styling.
+- Publish the Vue adapter and compatibility package as `0.6.3`.
+
 ## Unreleased
 
 - Convert the repository to a private npm-workspaces monorepo with `apps/` and `packages/` boundaries.
