@@ -1,6 +1,6 @@
 {
   "name": "nonomark",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "private": true,
   "description": "nonoMark editor monorepo.",
   "type": "module",
@@ -16,7 +16,8 @@
     "test:unit": "node --test test/*.test.mjs",
     "test:component": "vitest run test/*.test.js test/*.test.jsx",
     "typecheck": "tsc -p tsconfig.json",
-    "check": "npm test && npm run typecheck && npm run build && npm run build:playground"
+    "check": "npm test && npm run typecheck && npm run build && npm run test:package && npm run build:playground",
+    "test:package": "node --test test/package-exports.mjs"
   },
   "devDependencies": {
     "@tiptap/core": "3.29.2",

@@ -1,4 +1,4 @@
-import Image from '@tiptap/extension-image';
+import { Image } from '@tiptap/extension-image';
 import { Extension, mergeAttributes } from '@tiptap/core';
 import { findUnsupportedMarkdown } from '@nonoim/editor-core';
 

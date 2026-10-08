@@ -2,6 +2,12 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.6 - 2026-10-08
+
+- Fix CommonJS imports for the image extension and starter kit in both editor adapters.
+- Verify built ESM/CommonJS entry points, lazy preloading, and image-property editing before publishing.
+- Release all four packages together at 0.6.6. This patch includes the image-property improvements from 0.6.5.
+
 ## 0.6.5 — 2026-10-08
 
 - Select an image to open its properties beside it, including in long articles and narrow screens.
