@@ -10,6 +10,9 @@ import NonoVueEditor from '../packages/vue/src/NonoEditor.vue';
 import { NonoEditor as NonoReactEditor } from '../packages/react/src/index.jsx';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+// jsdom has no layout; TipTap's deferred focus scroll still queries selection geometry.
+Range.prototype.getClientRects = () => [];
+Range.prototype.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 });
 
 const vueWrappers = [];
 const reactRoots = [];
