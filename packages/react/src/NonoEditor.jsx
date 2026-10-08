@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
+import { CaptionImage, imageMarkdown, imageMarkdownFeatures, requiresImageSourceMode, imageToolsPosition } from '../../vue/src/imageProperties.js';
 import { TableKit } from '@tiptap/extension-table';
 import { Markdown } from '@tiptap/markdown';
 import { NodeSelection } from '@tiptap/pm/state';
+import { closeHistory } from '@tiptap/pm/history';
 import { Placeholder } from '@tiptap/extensions';
-import { findRemoteImageReferences, findUnsupportedMarkdown, importRemoteImagesFromContent, requiresSourceMode } from '@nonoim/editor-core';
+import { findRemoteImageReferences, importRemoteImagesFromContent } from '@nonoim/editor-core';
 
 const DEFAULT_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml';
 const cx = (...values) => values.filter(Boolean).join(' ');
@@ -25,12 +26,17 @@ export function NonoEditor({
     return vars ? text.replace(/\{(\w+)\}/g, (_match, key) => vars[key] == null ? '' : String(vars[key])) : text;
   }, [locale]);
   const editable = !disabled && !readOnly;
-  const [sourceMode, setSourceMode] = useState(() => autoSourceMode && requiresSourceMode(value));
+  const [sourceMode, setSourceMode] = useState(() => autoSourceMode && requiresImageSourceMode(value));
   const [sourceValue, setSourceValue] = useState(value || '');
   const [focused, setFocused] = useState(false);
   const [revision, setRevision] = useState(0);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkDraft, setLinkDraft] = useState('');
+  const [imagePropertiesOpen, setImagePropertiesOpen] = useState(false);
+  const [imageAltDraft, setImageAltDraft] = useState('');
+  const [imageCaptionDraft, setImageCaptionDraft] = useState('');
+  const [imageToolsStyle, setImageToolsStyle] = useState({});
+  const imageSurface = useRef(null), imagePanel = useRef(null), imageAltInput = useRef(null), imageTarget = useRef(null);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [uploading, setUploading] = useState(false);
   const sourceRef = useRef(null);
@@ -64,10 +70,10 @@ export function NonoEditor({
 
   const insertImages = useCallback((images) => {
     if (sourceMode) {
-      insertSourceBlock(images.map(({ url, alt, title }) => `![${String(alt || 'image').replace(/\]/g, '\\]')}](${url}${title ? ` "${String(title).replace(/"/g, '\\"')}"` : ''})`).join('\n\n'));
+      insertSourceBlock(images.map(image => imageMarkdown(image)).join('\n\n'));
       return;
     }
-    const nodes = images.flatMap(({ url, alt, title }) => [{ type: 'image', attrs: { src: url, alt: alt || 'image', title: title || null } }, { type: 'paragraph' }]);
+    const nodes = images.flatMap(({ url, alt, title }) => [{ type: 'image', attrs: { src: url, alt: alt ?? '', title: title ?? null } }, { type: 'paragraph' }]);
     if (nodes.length) editorRef.current?.chain().focus().insertContent(nodes).run();
   }, [insertSourceBlock, sourceMode]);
 
@@ -147,7 +153,7 @@ export function NonoEditor({
     immediatelyRender: false,
     editable,
     enableInputRules: true,
-    extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }), Image.configure({ allowBase64: allowBase64Images }), TableKit, Placeholder.configure({ placeholder: placeholder || tr('Start writing...', '开始输入正文…') }), Markdown],
+    extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }), CaptionImage.configure({ allowBase64: allowBase64Images }), TableKit, Placeholder.configure({ placeholder: placeholder || tr('Start writing...', '开始输入正文…') }), Markdown],
     content: value || '',
     contentType: 'markdown',
     editorProps: {
@@ -168,11 +174,49 @@ export function NonoEditor({
     if (!editor || value === lastPublished.current) return;
     sourceValueRef.current = value || '';
     setSourceValue(value || '');
-    if (autoSourceMode && requiresSourceMode(value)) setSourceMode(true);
+    if (autoSourceMode && requiresImageSourceMode(value)) setSourceMode(true);
     else if (!sourceMode) editor.commands.setContent(value || '', { contentType: 'markdown', emitUpdate: false });
   }, [autoSourceMode, editor, sourceMode, value]);
   useEffect(() => { if (autoFocus && !disabled) editor?.commands.focus(); }, [autoFocus, disabled, editor]);
   useEffect(() => () => { uploadController.current?.abort(); remoteImportController.current?.abort(); }, []);
+
+  const selection = editor?.state.selection;
+  const selectedImage = !sourceMode && selection instanceof NodeSelection && selection.node.type.name === 'image'
+    ? { pos: selection.from, ...selection.node.attrs } : null;
+  const closeImageProperties = useCallback(() => { imageTarget.current = null; setImagePropertiesOpen(false); }, []);
+  useEffect(() => {
+    const target = imageTarget.current;
+    if (!editable || (target && (!selectedImage || selectedImage.pos !== target.pos || selectedImage.src !== target.src))) closeImageProperties();
+    const updatePosition = () => {
+      const surface = imageSurface.current, node = selectedImage && editor?.view.nodeDOM(selectedImage.pos);
+      if (surface && node?.getBoundingClientRect) setImageToolsStyle(imageToolsPosition(surface, node, imagePanel.current?.parentElement.offsetHeight || 44));
+    };
+    updatePosition();
+    const outside = event => { if (!imagePanel.current?.contains(event.target) && !imageSurface.current?.querySelector('.nono-rich-editor__image-properties-button')?.contains(event.target)) closeImageProperties(); };
+    window.addEventListener('resize', updatePosition);
+    document.addEventListener('scroll', updatePosition, true);
+    window.visualViewport?.addEventListener('resize', updatePosition);
+    document.addEventListener('pointerdown', outside);
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updatePosition) : null;
+    if (imageSurface.current) observer?.observe(imageSurface.current);
+    const content = imageSurface.current?.querySelector('.ProseMirror');
+    if (content) observer?.observe(content);
+    return () => { window.removeEventListener('resize', updatePosition); document.removeEventListener('scroll', updatePosition, true); window.visualViewport?.removeEventListener('resize', updatePosition); document.removeEventListener('pointerdown', outside); observer?.disconnect(); };
+  }, [editor, editable, sourceMode, revision, imagePropertiesOpen, selectedImage?.pos, selectedImage?.src, closeImageProperties]);
+  useEffect(() => { if (imagePropertiesOpen) imageAltInput.current?.focus({ preventScroll: true }); }, [imagePropertiesOpen]);
+  const openImageProperties = () => {
+    if (!selectedImage || !editable || imagePropertiesOpen) return;
+    imageTarget.current = { pos: selectedImage.pos, src: selectedImage.src };
+    setImageAltDraft(selectedImage.alt || ''); setImageCaptionDraft(selectedImage.caption || ''); setImagePropertiesOpen(true);
+  };
+  const applyImageProperties = event => {
+    event.preventDefault();
+    const target = imageTarget.current, node = target && editor?.state.doc.nodeAt(target.pos);
+    if (!editable || sourceMode || !target || node?.type.name !== 'image' || node.attrs.src !== target.src) { closeImageProperties(); return; }
+    editor.view.dispatch(closeHistory(editor.state.tr).setNodeMarkup(target.pos, undefined, { ...node.attrs, alt: imageAltDraft, caption: imageCaptionDraft || null }));
+    editor.view.dispatch(closeHistory(editor.state.tr));
+    editor.commands.focus(undefined, { scrollIntoView: false }); closeImageProperties();
+  };
 
   const active = (name, attrs) => { void revision; return !sourceMode && Boolean(editor?.isActive(name, attrs)); };
   const sourceRange = () => ({ start: sourceRef.current?.selectionStart ?? sourceValueRef.current.length, end: sourceRef.current?.selectionEnd ?? sourceValueRef.current.length });
@@ -189,10 +233,10 @@ export function NonoEditor({
     const chain = editor?.chain().focus(); if (chain && typeof chain[name] === 'function') chain[name]().run();
   };
   const mark = (name) => { if (sourceMode) { const values = { bold: ['**', '**', tr('bold text', '粗体文字')], italic: ['_', '_', tr('italic text', '斜体文字')], strike: ['~~', '~~', tr('struck text', '删除文字')], code: ['`', '`', tr('code', '代码')] }; wrapSource(...values[name]); } else command(`toggle${name[0].toUpperCase()}${name.slice(1)}`); };
-  const toggleSource = () => { if (!editor) return; if (!sourceMode) { const markdown = editor.getMarkdown(); sourceValueRef.current = markdown; setSourceValue(markdown); setSourceMode(true); } else if (requiresSourceMode(sourceValueRef.current)) onWarning(tr('Remove unsupported Markdown features before switching to visual editing.', '请先移除当前不支持的 Markdown 语法，再切换到可视化编辑。')); else { editor.commands.setContent(sourceValueRef.current || '', { contentType: 'markdown', emitUpdate: false }); setSourceMode(false); editor.commands.focus(); } };
+  const toggleSource = () => { if (!editor) return; closeImageProperties(); if (!sourceMode) { const markdown = editor.getMarkdown(); sourceValueRef.current = markdown; setSourceValue(markdown); setSourceMode(true); } else if (requiresImageSourceMode(sourceValueRef.current)) onWarning(tr('Remove unsupported Markdown features before switching to visual editing.', '请先移除当前不支持的 Markdown 语法，再切换到可视化编辑。')); else { editor.commands.setContent(sourceValueRef.current || '', { contentType: 'markdown', emitUpdate: false }); setSourceMode(false); editor.commands.focus(); } };
   const applyLink = (override) => { if (!editable || !editor) return; const href = (typeof override === 'string' ? override : linkDraft).trim(); if (sourceMode) { const { start, end } = sourceRange(); const selected = sourceValueRef.current.slice(start, end) || tr('link text', '链接文字'); replaceRange(start, end, href ? `[${selected}](${href})` : selected); } else { const chain = editor.chain().focus().extendMarkRange('link'); href ? chain.setLink({ href }).run() : chain.unsetLink().run(); } setLinkOpen(false); };
   const cancelUpload = () => { const controller = uploadController.current; if (!controller) return; controller.abort(); callbacks.current.onUploadCancel(uploadingFiles.current); };
-  const protectedFeatures = sourceMode ? findUnsupportedMarkdown(sourceValue) : [];
+  const protectedFeatures = sourceMode ? imageMarkdownFeatures(sourceValue) : [];
   const minHeight = fill ? '640px' : `${Math.max(420, rows * 32)}px`;
   const characterCount = sourceMode ? sourceValue.length : (editor?.getText()?.length || 0);
 
@@ -210,7 +254,19 @@ export function NonoEditor({
       </div>}
       {protectedFeatures.length > 0 && <div className="nono-rich-editor__notice" role="status">{tr('This content stays in source mode to prevent formatting loss.', '此内容包含暂不支持的语法。为避免格式丢失，已保留在源码模式。')}</div>}
       {uploadStatus && <div className="nono-rich-editor__upload-status"><div><strong>{uploadStatus.name}</strong><span className="nono-rich-editor__upload-summary"><span className={`is-${uploadStatus.status}`}>{uploadStatus.status === 'uploading' ? `${uploadStatus.progress}%` : uploadStatus.status}</span>{uploadStatus.status === 'uploading' && <button type="button" title={tr('Cancel upload', '取消上传')} onClick={cancelUpload}>{tr('Cancel', '取消')}</button>}</span></div><div className="nono-rich-editor__progress"><i className={`is-${uploadStatus.status}`} style={{ width: `${uploadStatus.progress}%` }} /></div>{uploadStatus.error && <p>{uploadStatus.error}</p>}</div>}
-      {sourceMode ? <textarea ref={sourceRef} value={sourceValue} disabled={disabled} readOnly={readOnly} placeholder={placeholder} className="nono-rich-editor__source" style={{ '--nono-editor-min-height': minHeight }} spellCheck="false" onChange={(event) => publish(event.target.value)} onPaste={(event) => { const files = event.clipboardData?.files; if (files?.length) { event.preventDefault(); void uploadFiles(files); return; } const { start, end } = sourceRange(); handleRemotePaste(event, (content) => replaceRange(start, end, content)); }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} /> : <EditorContent editor={editor} className="nono-rich-editor__content" style={{ '--nono-editor-min-height': minHeight }} />}
+      {sourceMode ? <textarea ref={sourceRef} value={sourceValue} disabled={disabled} readOnly={readOnly} placeholder={placeholder} className="nono-rich-editor__source" style={{ '--nono-editor-min-height': minHeight }} spellCheck="false" onChange={(event) => publish(event.target.value)} onPaste={(event) => { const files = event.clipboardData?.files; if (files?.length) { event.preventDefault(); void uploadFiles(files); return; } const { start, end } = sourceRange(); handleRemotePaste(event, (content) => replaceRange(start, end, content)); }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} /> : <div ref={imageSurface} className="nono-rich-editor__image-surface" onKeyDown={event => { if (event.key === 'Escape') closeImageProperties(); }}>
+        <EditorContent editor={editor} className="nono-rich-editor__content" style={{ '--nono-editor-min-height': minHeight }} />
+        {selectedImage && editable && <div className="nono-rich-editor__image-tools" style={imageToolsStyle}>
+          <button type="button" className="nono-rich-editor__image-properties-button" aria-expanded={imagePropertiesOpen} onMouseDown={event => event.preventDefault()} onClick={openImageProperties}>{tr('Image properties', '图片属性')}</button>
+          {imagePropertiesOpen && <form ref={imagePanel} className="nono-rich-editor__image-properties" role="dialog" aria-label={tr('Image properties', '图片属性')} onSubmit={applyImageProperties}>
+            <label>{tr('Alternative text (alt)', '替代文本（alt）')}<input ref={imageAltInput} aria-label={tr('Alternative text (alt)', '替代文本（alt）')} value={imageAltDraft} onChange={event => setImageAltDraft(event.target.value)} /></label>
+            <p>{tr('Describe the image for people who cannot see it. This text is not a visible caption.', '描述图片内容，供无法看到图片的人使用。它不会作为图注显示。')}</p>
+            <label>{tr('Caption (optional)', '图注（可选）')}<input aria-label={tr('Caption (optional)', '图注（可选）')} value={imageCaptionDraft} onChange={event => setImageCaptionDraft(event.target.value)} /></label>
+            <p>{tr('Shown below this image in the article.', '填写后显示在文章的图片下方。')}</p>
+            <div className="nono-rich-editor__image-properties-actions">{imageCaptionDraft && <button type="button" onClick={() => setImageAltDraft(imageCaptionDraft)}>{tr('Use caption as alt', '用图注填写 alt')}</button>}<button type="button" onClick={closeImageProperties}>{tr('Cancel', '取消')}</button><button type="submit">{tr('Apply', '应用')}</button></div>
+          </form>}
+        </div>}
+      </div>}
       {editor && <div className="nono-rich-editor__footer"><span>{tr('{count} characters', '{count} 个字符', { count: characterCount })}</span><span className="nono-rich-editor__footer-meta">{footerStatus}<span>{sourceMode ? tr('Markdown source', 'Markdown 源码') : tr('Markdown compatible', '兼容 Markdown')}</span></span></div>}
     </div>{help && <p className="nono-rich-editor__help">{help}</p>}
   </div>;

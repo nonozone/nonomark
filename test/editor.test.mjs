@@ -72,16 +72,23 @@ test('raw HTML remains detectable', () => {
   assert.equal(containsRawHtml('**Markdown**'), false);
 });
 
-test('gallery output is plain Markdown image lines', () => {
+test('gallery output keeps alt separate from captions using portable HTML', () => {
   assert.equal(
     buildGalleryMarkdown([
       { url: 'https://example.com/one.jpg', caption: 'First image' },
       { url: 'https://example.com/two.jpg', alt: 'Two' },
       { url: 'https://example.com/three.jpg', caption: 'Third image' },
     ]),
-    '![First image](https://example.com/one.jpg)\n![Two](https://example.com/two.jpg)\n![Third image](https://example.com/three.jpg)',
+    '<figure><img src="https://example.com/one.jpg" alt=""><figcaption>First image</figcaption></figure>\n\n![Two](https://example.com/two.jpg)\n\n<figure><img src="https://example.com/three.jpg" alt=""><figcaption>Third image</figcaption></figure>',
   );
+  assert.equal(buildGalleryMarkdown([{ url: '/a.jpg', alt: 'A' }, { url: '/b.jpg', alt: '' }]), '![A](/a.jpg)\n![](/b.jpg)');
   assert.throws(() => buildGalleryMarkdown([{ url: 'https://example.com/one.jpg' }]));
+});
+
+test('caption figures bypass HTML protection only for the lossless adapter shape', () => {
+  assert.equal(requiresSourceMode('<figure><img src="/a.jpg" alt=""><figcaption>Caption</figcaption></figure>'), false);
+  assert.equal(requiresSourceMode('<figure><img alt=""><figcaption>Caption</figcaption></figure>'), true);
+  assert.equal(requiresSourceMode('<figure class="custom"><img src="/a.jpg" alt=""></figure>'), true);
 });
 
 test('rich editor adapters explicitly keep TipTap input rules enabled', () => {

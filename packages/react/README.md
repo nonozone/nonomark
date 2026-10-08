@@ -20,3 +20,7 @@ import { NonoLazyEditor, preloadNonoEditor } from '@nonoim/editor-react/lazy';
 ```
 
 The fallback is an editable controlled textarea. Call `preloadNonoEditor()` on route intent or during browser idle time to warm the full editor chunk.
+
+In visual mode, select an image and click **Image properties** beside it. Alternative text (`alt`) and the optional visible caption are separate fields. Empty alt stays empty. **Use caption as alt** explicitly copies the caption when desired; typing a caption alone preserves alt. Apply affects only the selected occurrence; cancel, Escape, undo and redo are supported.
+
+Uncaptioned images use standard Markdown; captioned images use portable HTML `<figure>`, `<img>`, and `<figcaption>` elements. The editor preserves alt, caption, URL and title through save/reopen and source/visual switching. Configure the article renderer to allow these HTML elements. Article edits do not update the host's image library.

@@ -24,7 +24,8 @@ describe('NonoEditor integration', () => {
     const pickerButtons = wrapper.findAll('button').filter((button) => button.text().includes('Choose image'));
     await pickerButtons[0].trigger('click');
     const firstPick = wrapper.emitted('gallery-pick-image').at(-1)[0];
-    firstPick.onSelect({ url: 'https://example.com/one.jpg', alt: 'One' });
+    const libraryAsset = Object.freeze({ url: 'https://example.com/one.jpg', alt: 'One' });
+    firstPick.onSelect(libraryAsset);
     await pickerButtons[1].trigger('click');
     const secondPick = wrapper.emitted('gallery-pick-image').at(-1)[0];
     secondPick.onSelect({ url: 'https://example.com/two.jpg', alt: 'Two' });
@@ -35,8 +36,17 @@ describe('NonoEditor integration', () => {
     await wrapper.findAll('button').find((button) => button.text().includes('Insert into document')).trigger('click');
 
     const value = wrapper.emitted('update:modelValue').at(-1)[0];
-    expect(value).toContain('![First image](https://example.com/one.jpg)\n![Second image](https://example.com/two.jpg)');
+    expect(value).toContain('<img src="https://example.com/one.jpg" alt="One"><figcaption>First image</figcaption>');
+    expect(value).toContain('<img src="https://example.com/two.jpg" alt="Two"><figcaption>Second image</figcaption>');
+    expect(wrapper.findAll('figcaption').map(node => node.text())).toEqual(['First image', 'Second image']);
     expect(value).not.toContain('|');
+    await wrapper.findAll('.nono-rich-editor__content img')[0].trigger('mousedown', { button: 0 });
+    await wrapper.find('.nono-rich-editor__image-properties-button').trigger('click');
+    await wrapper.find('input[aria-label="Alternative text (alt)"]').setValue('Article-specific alt');
+    await wrapper.find('.nono-rich-editor__image-properties').trigger('submit');
+    expect(libraryAsset.alt).toBe('One');
+    expect(wrapper.findAll('.nono-rich-editor__content img').map(node => node.attributes('alt'))).toEqual(['Article-specific alt', 'Two']);
+    expect(wrapper.findAll('figcaption').map(node => node.text())).toEqual(['First image', 'Second image']);
   });
 
   it('round trips consecutive Markdown image lines in visual mode', async () => {
@@ -193,6 +203,66 @@ describe('NonoEditor integration', () => {
     await wrapper.find('[contenteditable]').trigger('keydown', { key: 'Delete', code: 'Delete' });
     await nextTick();
     expect(wrapper.emitted('update:modelValue').at(-1)[0]).not.toContain('photo.jpg');
+  });
+
+  it('edits only the selected occurrence, keeps drafts on focus, cancels, and supports undo/redo and reopen', async () => {
+    const original = '![First](https://example.com/same.jpg "Title")\n![Second](https://example.com/same.jpg "Other title")';
+    const wrapper = await mountEditor({ modelValue: original }, { attachTo: document.body });
+    const select = async index => {
+      await wrapper.findAll('.nono-rich-editor__content img')[index].trigger('mousedown', { button: 0 });
+      await wrapper.find('.nono-rich-editor__image-properties-button').trigger('click');
+      await nextTick();
+    };
+    const form = () => wrapper.find('.nono-rich-editor__image-properties');
+    const alt = () => wrapper.find('input[aria-label="Alternative text (alt)"]');
+    const caption = () => wrapper.find('input[aria-label="Caption (optional)"]');
+    const instance = wrapper.find('[contenteditable]').element.editor;
+    await select(1);
+    const beforeCancel = instance.getMarkdown();
+    expect(alt().element.value).toBe('Second');
+    await alt().setValue('Draft');
+    await caption().setValue('Draft caption');
+    caption().element.focus();
+    await nextTick();
+    expect(alt().element.value).toBe('Draft');
+    await form().findAll('button').find(node => node.text() === 'Use caption as alt').trigger('click');
+    expect(alt().element.value).toBe('Draft caption');
+    expect(caption().element.value).toBe('Draft caption');
+    await form().findAll('button').find(node => node.text() === 'Cancel').trigger('click');
+    expect(instance.getMarkdown()).toBe(beforeCancel);
+    await select(1);
+    await alt().setValue('Esc draft');
+    await alt().trigger('keydown', { key: 'Escape' });
+    expect(form().exists()).toBe(false);
+    await select(1);
+    expect(alt().element.value).toBe('Second');
+    await alt().setValue('');
+    await caption().setValue('Independent caption');
+    await form().trigger('submit');
+    const images = wrapper.findAll('.nono-rich-editor__content img');
+    expect(images.map(node => node.attributes('alt'))).toEqual(['First', '']);
+    expect(images.map(node => node.attributes('title'))).toEqual(['Title', 'Other title']);
+    expect(wrapper.find('figcaption').text()).toBe('Independent caption');
+    instance.commands.undo(); await nextTick();
+    expect(wrapper.findAll('.nono-rich-editor__content img')[1].attributes('alt')).toBe('Second');
+    expect(wrapper.find('figcaption').exists()).toBe(false);
+    instance.commands.redo(); await nextTick();
+    await select(1);
+    expect(alt().element.value).toBe('');
+    expect(caption().element.value).toBe('Independent caption');
+    await alt().setValue('Article only');
+    await form().trigger('submit');
+    const saved = wrapper.emitted('update:modelValue').at(-1)[0];
+    const reopened = await mountEditor({ modelValue: saved, autoSourceMode: true });
+    expect(reopened.find('[contenteditable]').exists()).toBe(true);
+    expect(reopened.findAll('.nono-rich-editor__content img').map(node => node.attributes('alt'))).toEqual(['First', 'Article only']);
+    expect(reopened.find('figcaption').text()).toBe('Independent caption');
+    const sourceButton = () => reopened.findAll('button').find(node => /Source|Visual/.test(node.text()));
+    await sourceButton().trigger('click');
+    expect(reopened.find('textarea.nono-rich-editor__source').element.value).toContain('Other title');
+    await sourceButton().trigger('click');
+    expect(reopened.find('figcaption').text()).toBe('Independent caption');
+    expect(reopened.findAll('.nono-rich-editor__content img')[1].attributes('alt')).toBe('Article only');
   });
 
   it('keeps formatting tools usable in Markdown source mode', async () => {

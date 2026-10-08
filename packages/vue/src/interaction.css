@@ -67,3 +67,27 @@
   .nono-rich-editor__gallery-items { grid-template-columns: 1fr; }
   .nono-rich-editor__gallery-dialog { padding: 16px; }
 }
+
+/* Image attributes stay close to the selected image, including long documents. */
+.nono-rich-editor__image-surface { position: relative; display: flex; min-height: 0; flex: 1; flex-direction: column; }
+.nono-rich-editor__content .ProseMirror-selectednode { outline: 2px solid var(--nono-editor-primary); outline-offset: 3px; }
+.nono-rich-editor__content figure { margin: 1.2em auto; }
+.nono-rich-editor__content figure img { margin: 0 auto; }
+.nono-rich-editor__content figure.ProseMirror-selectednode { outline: none; }
+.nono-rich-editor__content figure.ProseMirror-selectednode img { outline: 2px solid var(--nono-editor-primary); outline-offset: 3px; }
+.nono-rich-editor__content figcaption { margin-top: .5em; color: var(--nono-editor-muted); font-size: .85em; text-align: center; }
+.nono-rich-editor__image-tools { position: absolute; z-index: 20; display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 24px); }
+.nono-rich-editor__image-properties-button { border: 1px solid var(--nono-editor-border); border-radius: 6px; padding: 7px 10px; background: #fff; color: var(--nono-editor-heading); box-shadow: 0 2px 8px #0002; cursor: pointer; }
+.nono-rich-editor__image-properties { box-sizing: border-box; width: 100%; max-height: min(calc(100dvh - 64px), var(--nono-image-panel-max-height, 100dvh)); overflow: auto; margin-top: 6px; padding: 14px; border: 1px solid var(--nono-editor-border); border-radius: 8px; background: #fff; color: var(--nono-editor-text); box-shadow: 0 8px 24px #0002; }
+.nono-rich-editor__image-properties label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+.nono-rich-editor__image-properties input { box-sizing: border-box; width: 100%; padding: 8px; border: 1px solid var(--nono-editor-border); border-radius: 4px; color: var(--nono-editor-text); background: #fff; }
+.nono-rich-editor__image-properties p { margin: 5px 0 12px; color: var(--nono-editor-muted); font-size: 12px; line-height: 1.5; }
+.nono-rich-editor__image-properties-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.nono-rich-editor__image-properties-actions button { padding: 7px 12px; border: 1px solid var(--nono-editor-border); border-radius: 4px; background: #fff; cursor: pointer; }
+.nono-rich-editor__image-properties-actions button[type=submit] { background: var(--nono-editor-primary); border-color: var(--nono-editor-primary); color: #fff; }
+@media (max-width: 520px) {
+  .nono-rich-editor__image-properties input { font-size: 16px; }
+  .nono-rich-editor__image-properties-actions { flex-wrap: wrap; }
+  .nono-rich-editor__image-properties-actions button,
+  .nono-rich-editor__image-properties-button { min-height: 44px; }
+}

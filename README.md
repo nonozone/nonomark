@@ -145,7 +145,9 @@ Named slots: `toolbar-end` adds host-specific actions to the end of the formatti
 
 `uploadImages` is a storage-provider-neutral contract. Selecting, pasting or dropping images uses the same function, and only one batch runs at a time. Resolve to assets with at least a stable `url`; optional `provider`, `key`, MIME and size metadata is preserved in upload events for host-side migration or bookkeeping.
 
-In visual mode, click an image to select it. The selected image receives a visible outline and can be removed with `Delete` or `Backspace`.
+In visual mode, click an image to select it. The selected image receives a visible outline and an **Image properties** button beside it, including in long articles and narrow screens. Alt (normally invisible) and optional captions (shown below the image) are independent fields. Empty alt is preserved. **Use caption as alt** is an explicit shortcut; changing the caption alone does not replace alt. Apply edits only the selected occurrence, even if the same URL is reused. Cancel, Escape, undo and redo are supported. The selected image can also be removed with `Delete` or `Backspace`.
+
+Uncaptioned images keep standard Markdown syntax. Captioned images use standard HTML `<figure><img src="…" alt="…" title="…"><figcaption>…</figcaption></figure>`, preserving all four fields through save/reopen and source/visual switching. Allow these elements in your article renderer. Library defaults are copied on insertion; editing an article image does not change the library asset or other articles. Existing articles are not batch migrated.
 
 ```ts
 type UploadImages = (
@@ -249,7 +251,7 @@ These features currently stay in source mode because Tiptap cannot preserve them
 - task lists (`- [ ] item`)
 - YAML or TOML frontmatter
 - footnotes
-- raw HTML
+- raw HTML other than the editor's supported caption figures
 
 `findUnsupportedMarkdown(markdown)` returns the detected feature names and `requiresSourceMode(markdown)` reports whether visual editing would be lossy. Unsupported syntax is never silently converted.
 

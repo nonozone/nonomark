@@ -17,7 +17,7 @@ import { NonoLazyEditor, preloadNonoEditor } from '@nonoim/editor-vue/lazy';
 
 `NonoLazyEditor` accepts the same props and `v-model`. It shows an editable Markdown textarea while loading the full editor. Call `preloadNonoEditor()` on route intent, menu hover, or during browser idle time to warm the async chunk before navigation.
 
-The toolbar includes a `Gallery` button by default. It inserts one standard Markdown image per line. The caption is used as the image `alt` text, so the result stays portable in plain text:
+The toolbar includes a `Gallery` button by default. Images without captions use standard Markdown image lines; images with captions use standard HTML `<figure>`, `<img>`, and `<figcaption>` elements. Alternative text (`alt`) and visible captions are stored separately:
 
 ```vue
 <NonoEditor
@@ -31,4 +31,6 @@ The toolbar includes a `Gallery` button by default. It inserts one standard Mark
 </NonoEditor>
 ```
 
-Users choose 2, 3, or 4 images, reorder them, and edit captions before insertion. `uploadImages` can provide the upload action in the dialog. Set `:enable-gallery="false"` to hide the tool.
+Users choose 2, 3, or 4 images, reorder them, and edit alt and optional captions before insertion. The picker copies an asset's default alt into the article; editing it does not change the library asset or other articles. Empty alt stays empty. `uploadImages` can provide the upload action in the dialog. Set `:enable-gallery="false"` to hide the tool.
+
+In visual mode, select an image and click **Image properties** beside it. The panel edits only that occurrence, including when the same URL appears more than once. Changing a caption never automatically replaces alt. **Use caption as alt** explicitly copies it when desired; apply, cancel, Escape, undo and redo are supported. URL and title are preserved through save/reopen and source/visual switching.

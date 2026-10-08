@@ -78,6 +78,59 @@ describe('React NonoEditor', () => {
     expect(onChange).toHaveBeenLastCalledWith(expect.not.stringContaining('photo.jpg'));
   });
 
+  it('keeps image drafts and occurrence attributes independent through undo and save/reopen', async () => {
+    const onChange = vi.fn();
+    const container = await renderEditor({ value: '![One](/same.jpg "First title")\n![Two](/same.jpg "Second title")', onChange });
+    const click = element => act(async () => element.click());
+    const field = label => container.querySelector(`input[aria-label="${label}"]`);
+    const fill = async (element, value) => act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(element, value);
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const open = async () => {
+      await act(async () => container.querySelectorAll('.nono-rich-editor__content img')[1].dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 })));
+      await click(container.querySelector('.nono-rich-editor__image-properties-button'));
+    };
+    const button = text => Array.from(container.querySelectorAll('.nono-rich-editor__image-properties button')).find(element => element.textContent === text);
+    const submit = () => act(async () => container.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    const instance = container.querySelector('[contenteditable]').editor;
+    await open();
+    expect(field('Alternative text (alt)').value).toBe('Two');
+    await fill(field('Caption (optional)'), 'Visible caption');
+    expect(field('Alternative text (alt)').value).toBe('Two');
+    await act(async () => field('Alternative text (alt)').focus());
+    expect(field('Caption (optional)').value).toBe('Visible caption');
+    await click(button('Use caption as alt'));
+    expect(field('Alternative text (alt)').value).toBe('Visible caption');
+    await click(button('Cancel'));
+    expect(container.querySelector('figcaption')).toBeNull();
+    await open();
+    await fill(field('Alternative text (alt)'), 'Esc draft');
+    await act(async () => field('Alternative text (alt)').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    expect(container.querySelector('form')).toBeNull();
+    await open();
+    expect(field('Alternative text (alt)').value).toBe('Two');
+    await fill(field('Alternative text (alt)'), '');
+    await fill(field('Caption (optional)'), 'Visible caption');
+    await submit();
+    expect(Array.from(container.querySelectorAll('.nono-rich-editor__content img')).map(image => image.alt)).toEqual(['One', '']);
+    expect(container.querySelector('figcaption').textContent).toBe('Visible caption');
+    await act(async () => instance.commands.undo());
+    expect(container.querySelectorAll('.nono-rich-editor__content img')[1].alt).toBe('Two');
+    expect(container.querySelector('figcaption')).toBeNull();
+    await act(async () => instance.commands.redo());
+    const saved = onChange.mock.lastCall[0];
+    const reopened = await renderEditor({ value: saved, autoSourceMode: true });
+    expect(reopened.querySelector('[contenteditable]')).not.toBeNull();
+    expect(reopened.querySelectorAll('.nono-rich-editor__content img')[1].alt).toBe('');
+    expect(reopened.querySelectorAll('.nono-rich-editor__content img')[1].title).toBe('Second title');
+    const sourceButton = () => Array.from(reopened.querySelectorAll('button')).find(element => /Source|Visual/.test(element.textContent));
+    await click(sourceButton());
+    await click(sourceButton());
+    expect(reopened.querySelector('figcaption').textContent).toBe('Visible caption');
+    expect(reopened.querySelectorAll('.nono-rich-editor__content img')[1].alt).toBe('');
+  });
+
   it('imports remote Markdown images from a visual paste', async () => {
     const onChange = vi.fn();
     const onRemoteImageImportComplete = vi.fn();
