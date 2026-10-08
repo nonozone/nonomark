@@ -1,4 +1,4 @@
-import { imageMarkdown } from './imageProperties.js';
+import { imageMarkdown } from './imageMarkdown.js';
 
 export const buildGalleryMarkdown = (items) => {
   if (!Array.isArray(items) || items.length < 2 || items.length > 4) throw new Error('A gallery needs 2 to 4 images.');
