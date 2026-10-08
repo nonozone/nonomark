@@ -2,6 +2,16 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.5 — 2026-10-08
+
+- Select an image to open its properties beside it, including in long articles and narrow screens.
+- Store alternative text (`alt`) and visible captions separately. Empty alt stays empty; an optional action copies the caption into alt.
+- Edit only the selected occurrence, with cancel, Escape, undo and redo. Article edits do not update the host image library.
+- Preserve alt, caption, URL and title through saving, reopening and source/visual switching. Captions use portable HTML figures; ordinary images keep Markdown syntax.
+- Keep consecutive gallery images editable without invalid paragraph nesting, and preserve the full-screen editor's scroll layout.
+
+All four packages (`@nonoim/editor-core`, `@nonoim/editor-vue`, `@nonoim/editor-react`, and the compatibility package `@nonoim/editor`) are released together at 0.6.5.
+
 ## 0.6.4 - 2026-09-23
 
 - Store gallery insertions as one standard Markdown image per line.

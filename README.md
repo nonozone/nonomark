@@ -279,6 +279,20 @@ npm run build
 npm pack --dry-run --ignore-scripts
 ```
 
+### Releases
+
+Every consumer-facing editor update must be published as a new npm version; a Git push alone does not make the update installable. Keep the root version, all four package versions, internal dependency versions, and `package-lock.json` synchronized. Small fixes and improvements use the next patch version; larger changes can use a minor version.
+
+Update `CHANGELOG.md`, run `npm run check` and `npm pack --workspaces --dry-run --ignore-scripts`, then commit and push the release and its matching `v<version>` tag. The tag triggers `.github/workflows/publish.yml`, which verifies the release and publishes core, Vue, React, and compatibility packages in dependency order. Verify all four registry versions and a clean installation before declaring the release complete.
+
+To update a consuming project, install the adapter it uses:
+
+```bash
+npm install @nonoim/editor-vue@latest
+# or: npm install @nonoim/editor-react@latest
+# or, for existing compatibility users: npm install @nonoim/editor@latest
+```
+
 ### Playground
 
 Public demo: [https://nonozone.github.io/nonomark/](https://nonozone.github.io/nonomark/)
