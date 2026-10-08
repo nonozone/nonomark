@@ -79,7 +79,7 @@ test('gallery output keeps alt separate from captions using portable HTML', () =
       { url: 'https://example.com/two.jpg', alt: 'Two' },
       { url: 'https://example.com/three.jpg', caption: 'Third image' },
     ]),
-    '<figure><img src="https://example.com/one.jpg" alt=""><figcaption>First image</figcaption></figure>\n\n![Two](https://example.com/two.jpg)\n\n<figure><img src="https://example.com/three.jpg" alt=""><figcaption>Third image</figcaption></figure>',
+    '<div class="nono-image-gallery" data-nono-gallery="3">\n<figure><img src="https://example.com/one.jpg" alt=""><figcaption>First image</figcaption></figure>\n<img src="https://example.com/two.jpg" alt="Two">\n<figure><img src="https://example.com/three.jpg" alt=""><figcaption>Third image</figcaption></figure>\n</div>',
   );
   assert.equal(buildGalleryMarkdown([{ url: '/a.jpg', alt: 'A' }, { url: '/b.jpg', alt: '' }]), '![A](/a.jpg)\n![](/b.jpg)');
   assert.throws(() => buildGalleryMarkdown([{ url: 'https://example.com/one.jpg' }]));

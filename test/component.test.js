@@ -16,6 +16,74 @@ afterEach(() => {
 });
 
 describe('NonoEditor integration', () => {
+  it('isolates a source-mode insertion from an existing image even at a single newline', async () => {
+    const wrapper = await mountEditor({ modelValue: '![Outside](/outside.jpg)\n\nAfter' });
+    await wrapper.findAll('button').find(button => button.text().includes('Source')).trigger('click');
+    const source = wrapper.find('textarea.nono-rich-editor__source');
+    const position = source.element.value.indexOf('\n') + 1;
+    source.element.setSelectionRange(position, position);
+    await wrapper.find('button[title="Gallery"]').trigger('click');
+    const choices = wrapper.findAll('button').filter(button => button.text() === 'Choose image');
+    for (const [index, alt] of ['First', 'Second'].entries()) {
+      await choices[index].trigger('click');
+      wrapper.emitted('gallery-pick-image').at(-1)[0].onSelect({ url: `/${index}.jpg`, alt });
+      await nextTick();
+    }
+    await wrapper.findAll('button').find(button => button.text() === 'Insert into document').trigger('click');
+    expect(source.element.value).toBe('![Outside](/outside.jpg)\n\n![First](/0.jpg)\n![Second](/1.jpg)\n\nAfter');
+    await wrapper.findAll('button').find(button => button.text().includes('Visual')).trigger('click');
+    expect(wrapper.find('.nono-image-gallery').findAll('img')).toHaveLength(2);
+    expect(wrapper.findAll('.ProseMirror > img').map(image => image.attributes('alt'))).toEqual(['Outside']);
+  });
+
+  it.each([2, 3, 4].flatMap(count => [[count, false], [count, true]]))('inserts %i images as one group, captions=%s, with undo and source/reopen', async (count, withCaption) => {
+    const original = '![Outside](/outside.jpg)\n\nBeforeAfter\n\n![Outside 2](/outside2.jpg)';
+    const wrapper = await mountEditor({ modelValue: original }, { attachTo: document.body });
+    const instance = wrapper.find('[contenteditable]').element.editor;
+    instance.state.doc.forEach((node, pos) => {
+      if (node.type.name === 'paragraph' && node.textContent === 'BeforeAfter') instance.commands.setTextSelection(pos + 7);
+    });
+    const beforeInsert = instance.getMarkdown();
+    await wrapper.find('button[title="Gallery"]').trigger('click');
+    await wrapper.find(`input[name="nono-gallery-columns"][value="${count}"]`).trigger('change');
+    expect(wrapper.find('.nono-rich-editor__gallery-layout-hint').text()).toContain(`${count} images will appear in one row`);
+    const choices = wrapper.findAll('button').filter(button => button.text() === 'Choose image');
+    for (let index = 0; index < count; index++) {
+      await choices[index].trigger('click');
+      wrapper.emitted('gallery-pick-image').at(-1)[0].onSelect({ url: '/same.jpg', alt: index === 1 ? '' : `Original ${index}.png`, title: `Title ${index}` });
+      await nextTick();
+    }
+    if (withCaption) await wrapper.find('input[placeholder="Image caption (optional)"]').setValue('Visible <caption> & text');
+    await wrapper.findAll('button').find(button => button.text() === 'Insert into document').trigger('click');
+    const gallery = () => wrapper.find('.nono-image-gallery');
+    expect(gallery().attributes('data-nono-gallery')).toBe(String(count));
+    expect(gallery().findAll('img')).toHaveLength(count);
+    expect(instance.getText()).toContain('Before');
+    expect(instance.getText()).toContain('After');
+    expect(wrapper.findAll('.nono-rich-editor__content > .ProseMirror > img')).toHaveLength(2);
+    instance.commands.undo(); await nextTick();
+    expect(instance.getMarkdown()).toBe(beforeInsert);
+    instance.commands.redo(); await nextTick();
+    expect(gallery().findAll('img')).toHaveLength(count);
+    await gallery().findAll('img')[1].trigger('mousedown', { button: 0 });
+    await wrapper.find('.nono-rich-editor__image-properties-button').trigger('click');
+    expect(wrapper.find('input[aria-label="Alternative text (alt)"]').element.value).toBe('');
+    await wrapper.find('input[aria-label="Caption (optional)"]').setValue('Second <caption> & text');
+    await wrapper.find('.nono-rich-editor__image-properties').trigger('submit');
+    const saved = instance.getMarkdown();
+    expect(saved).toContain(`data-nono-gallery="${count}"`);
+    const sourceButton = () => wrapper.findAll('button').find(button => /Source|Visual/.test(button.text()));
+    await sourceButton().trigger('click');
+    expect(wrapper.find('textarea.nono-rich-editor__source').element.value).toBe(saved);
+    await sourceButton().trigger('click');
+    expect(gallery().findAll('img')).toHaveLength(count);
+    const reopened = await mountEditor({ modelValue: saved, autoSourceMode: true });
+    expect(reopened.find('.nono-image-gallery').findAll('img')).toHaveLength(count);
+    expect(reopened.findAll('.nono-rich-editor__content img').map(image => image.attributes('alt'))).toEqual(['Outside', ...Array.from({ length: count }, (_, index) => index === 1 ? '' : `Original ${index}.png`), 'Outside 2']);
+    expect(reopened.findAll('.nono-rich-editor__content img')[2].attributes('title')).toBe('Title 1');
+    expect(reopened.find('[contenteditable]').element.editor.getMarkdown()).toBe(saved);
+  });
+
   it('inserts a two image gallery through the host picker callback', async () => {
     const wrapper = await mountEditor({ enableGallery: true });
     await wrapper.find('button[title="Gallery"]').trigger('click');

@@ -20,7 +20,10 @@ for (const name of ['@nonoim/editor-core', '@nonoim/editor-vue', '@nonoim/editor
   test(`${name}: built ESM and CommonJS exports`, async () => {
     const esm = await import(name), cjs = require(name);
     if (name === '@nonoim/editor-core') {
-      for (const entry of [esm, cjs]) assert.equal(entry.requiresSourceMode('<figure><img src="/photo.jpg" alt=""><figcaption>Caption</figcaption></figure>'), false);
+      for (const entry of [esm, cjs]) {
+        assert.equal(entry.requiresSourceMode('<figure><img src="/photo.jpg" alt=""><figcaption>Caption</figcaption></figure>'), false);
+        assert.equal(entry.requiresSourceMode('<div class="nono-image-gallery" data-nono-gallery="2"><figure><img src="/photo.jpg" alt=""><figcaption>Caption</figcaption></figure><img src="/second.jpg" alt=""></div>'), false);
+      }
       return;
     }
     assert.ok(esm.NonoEditor);
@@ -41,9 +44,11 @@ const verifyImageEdit = host => {
   assert.deepEqual(images.map(image => image.alt), ['First', '']);
   assert.deepEqual(images.map(image => image.title), ['First title', 'Second title']);
   assert.equal(host.querySelector('figcaption').textContent, 'Caption');
+  assert.equal(host.querySelector('.nono-image-gallery').dataset.nonoGallery, '2');
   const instance = host.querySelector('[contenteditable]').editor;
   assert.match(instance.getMarkdown(), /Before/);
   assert.match(instance.getMarkdown(), /After/);
+  assert.match(instance.getMarkdown(), /data-nono-gallery="2"/);
   instance.state.doc.check();
 };
 

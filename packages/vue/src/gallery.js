@@ -1,8 +1,9 @@
-import { imageMarkdown } from './imageMarkdown.js';
+import { imageHtml, imageMarkdown } from './imageMarkdown.js';
 
 export const buildGalleryMarkdown = (items) => {
   if (!Array.isArray(items) || items.length < 2 || items.length > 4) throw new Error('A gallery needs 2 to 4 images.');
-  const images = items.map(item => imageMarkdown({ ...item, caption: item.caption || null }));
-  // HTML blocks need a blank line before the following Markdown image.
-  return images.join(items.some(item => item.caption) ? '\n\n' : '\n');
+  if (items.some(item => item.caption)) {
+    return `<div class="nono-image-gallery" data-nono-gallery="${items.length}">\n${items.map(item => imageHtml({ ...item, caption: item.caption || null })).join('\n')}\n</div>`;
+  }
+  return items.map(item => imageMarkdown({ ...item, caption: null })).join('\n');
 };

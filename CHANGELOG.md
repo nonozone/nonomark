@@ -2,6 +2,13 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.8 - 2026-10-08
+
+- Preserve 2/3/4-image galleries as explicit editor groups, keeping single-newline Markdown images together and blank-line-separated images independent.
+- Display fixed desktop column counts with equal thumbnail frames; mobile uses one column. Clarify the gallery picker layout and article layout.
+- Keep group boundaries across insertion, per-image alt/description editing, undo/redo, source switching and reopening. Remove empty galleries when their last image is deleted.
+- Save captioned groups with `div.nono-image-gallery[data-nono-gallery]` and publish an HTML integration example for frameworks, preserving image URLs, alt, titles and descriptions.
+
 ## 0.6.7 - 2026-10-08
 
 - Rename Chinese image-property labels to “锚文本 alt”, “图片说明（可选）”, and “一键替换ALT” in Vue and React, with consistent gallery labels.

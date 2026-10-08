@@ -251,9 +251,41 @@ These features currently stay in source mode because Tiptap cannot preserve them
 - task lists (`- [ ] item`)
 - YAML or TOML frontmatter
 - footnotes
-- raw HTML other than the editor's supported caption figures
+- raw HTML other than the editor's supported caption figures and explicit image galleries
 
 `findUnsupportedMarkdown(markdown)` returns the detected feature names and `requiresSourceMode(markdown)` reports whether visual editing would be lossy. Unsupported syntax is never silently converted.
+
+## Image galleries and framework integration
+
+In both visual adapters, 2–4 Markdown images on consecutive lines form one `imageGallery` node. A blank line separates independent images or groups. Multiple images on the same line are not treated as a gallery. The Vue gallery picker inserts one group; its two-column selection cards do not determine the article layout.
+
+Without image descriptions, a group saves as standard Markdown with exactly one newline between images:
+
+```markdown
+Before.
+
+![First](/one.jpg "Original title")
+![](/two.jpg)
+![Third](/three.jpg)
+
+After.
+```
+
+When any image has a description, the saved source uses an explicit standard HTML wrapper. The same wrapper appears in `editor.getHTML()`, including for groups without descriptions:
+
+```html
+<div class="nono-image-gallery" data-nono-gallery="3">
+<figure><img src="/one.jpg" alt="First" title="Original title"><figcaption>Visible description</figcaption></figure>
+<img src="/two.jpg" alt="">
+<img src="/three.jpg" alt="Third">
+</div>
+```
+
+`data-nono-gallery` is the image count (2, 3, or 4). Each direct child is one image or its figure. URLs, alt and titles stay on the `img`; descriptions stay in `figcaption`. Each image is independently selectable/editable. The wrapper survives image-property edits, undo/redo, source switching and reopening. Existing independent figures are not inferred to be a group.
+
+Framework renderers should recognize this explicit wrapper in addition to their consecutive-Markdown-image rule, and preserve its class, count and child figures. For example, LeanSiteKit can adapt it to `.site-image-gallery` and apply its existing mobile breakpoint. Desktop columns should be explicit `repeat(2|3|4, minmax(0, 1fr))`; avoid `auto-fit` or a minimum column width that changes the count in a narrow article. Public article images can keep `width: 100%; height: auto` and their original aspect ratio.
+
+The editor's own stylesheet displays equal-width 4:3 thumbnail frames on desktop, containing the complete image without distortion. Three images occupy three columns and four occupy four even in a narrow editor. At widths up to 720px it uses one column. These editing previews do not impose thumbnail sizing on the exported article.
 
 ## Styling
 

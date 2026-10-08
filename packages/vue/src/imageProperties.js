@@ -1,12 +1,50 @@
 import { Image } from '@tiptap/extension-image';
-import { Extension, mergeAttributes } from '@tiptap/core';
+import { Extension, Node, mergeAttributes } from '@tiptap/core';
+import { Plugin } from '@tiptap/pm/state';
 import { findUnsupportedMarkdown } from '@nonoim/editor-core';
 
 import { imageMarkdown } from './imageMarkdown.js';
+import { buildGalleryMarkdown } from './gallery.js';
 export { imageMarkdown };
 
 export const imageMarkdownFeatures = markdown => findUnsupportedMarkdown(markdown);
 export const requiresImageSourceMode = markdown => imageMarkdownFeatures(markdown).length > 0;
+
+const ImageGallery = Node.create({
+  name: 'imageGallery',
+  group: 'block',
+  content: 'image*',
+  defining: true,
+  isolating: true,
+  selectable: false,
+  addProseMirrorPlugins() {
+    return [new Plugin({ appendTransaction: (_transactions, _oldState, state) => {
+      const empty = [];
+      state.doc.descendants((node, pos) => {
+        if (node.type.name === 'imageGallery' && !node.childCount) empty.push({ pos, size: node.nodeSize });
+      });
+      if (!empty.length) return null;
+      const transaction = state.tr;
+      for (const { pos, size } of empty.reverse()) transaction.delete(pos, pos + size);
+      return transaction;
+    } })];
+  },
+  parseHTML() {
+    return [{ tag: 'div.nono-image-gallery[data-nono-gallery]', getAttrs: element => {
+      const count = Number(element.getAttribute('data-nono-gallery'));
+      return count >= 2 && count <= 4 && element.children.length === count &&
+        Array.from(element.children).every(child => child.matches('img, figure')) ? {} : false;
+    } }];
+  },
+  renderHTML({ node }) {
+    return ['div', { class: 'nono-image-gallery', 'data-nono-gallery': String(node.childCount) }, 0];
+  },
+  renderMarkdown(node) {
+    const items = (node.content || []).map(image => image.attrs);
+    if (!items.length) return '';
+    return items.length === 1 ? imageMarkdown(items[0]) : buildGalleryMarkdown(items);
+  },
+});
 
 // Consecutive Markdown images are lexed as one paragraph. Lift block images
 // out of it so attribute transactions operate on a valid ProseMirror document.
@@ -20,6 +58,12 @@ const ImageParagraphs = Extension.create({
   },
   parseMarkdown(token, helpers) {
     if (!token.tokens?.some(item => item.type === 'image')) return null;
+    const images = token.tokens.filter(item => item.type === 'image');
+    if (images.length >= 2 && images.length <= 4 &&
+        token.tokens.every(item => item.type === 'image' || (item.type === 'text' && !item.text.trim())) &&
+        token.raw.trim().split(/\r?\n/).length === images.length) {
+      return helpers.createNode('imageGallery', undefined, helpers.parseInline(images));
+    }
     const result = [];
     let inline = [];
     const flush = () => {
@@ -36,7 +80,7 @@ const ImageParagraphs = Extension.create({
 });
 
 export const CaptionImage = Image.extend({
-  addExtensions() { return [ImageParagraphs]; },
+  addExtensions() { return [ImageGallery, ImageParagraphs]; },
   addAttributes() {
     return { ...this.parent?.(), caption: { default: null, rendered: false } };
   },
