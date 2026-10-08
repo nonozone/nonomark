@@ -259,11 +259,11 @@ export function NonoEditor({
         {selectedImage && editable && <div className="nono-rich-editor__image-tools" style={imageToolsStyle}>
           <button type="button" className="nono-rich-editor__image-properties-button" aria-expanded={imagePropertiesOpen} onMouseDown={event => event.preventDefault()} onClick={openImageProperties}>{tr('Image properties', '图片属性')}</button>
           {imagePropertiesOpen && <form ref={imagePanel} className="nono-rich-editor__image-properties" role="dialog" aria-label={tr('Image properties', '图片属性')} onSubmit={applyImageProperties}>
-            <label>{tr('Alternative text (alt)', '替代文本（alt）')}<input ref={imageAltInput} aria-label={tr('Alternative text (alt)', '替代文本（alt）')} value={imageAltDraft} onChange={event => setImageAltDraft(event.target.value)} /></label>
-            <p>{tr('Describe the image for people who cannot see it. This text is not a visible caption.', '描述图片内容，供无法看到图片的人使用。它不会作为图注显示。')}</p>
-            <label>{tr('Caption (optional)', '图注（可选）')}<input aria-label={tr('Caption (optional)', '图注（可选）')} value={imageCaptionDraft} onChange={event => setImageCaptionDraft(event.target.value)} /></label>
+            <label>{tr('Alternative text (alt)', '锚文本 alt')}<input ref={imageAltInput} aria-label={tr('Alternative text (alt)', '锚文本 alt')} value={imageAltDraft} onChange={event => setImageAltDraft(event.target.value)} /></label>
+            <p>{tr('Describe the image for people who cannot see it. This text is not a visible caption.', '描述图片内容，供无法看到图片的人使用。它不会作为图片说明显示。')}</p>
+            <label>{tr('Caption (optional)', '图片说明（可选）')}<input aria-label={tr('Caption (optional)', '图片说明（可选）')} value={imageCaptionDraft} onChange={event => setImageCaptionDraft(event.target.value)} /></label>
             <p>{tr('Shown below this image in the article.', '填写后显示在文章的图片下方。')}</p>
-            <div className="nono-rich-editor__image-properties-actions">{imageCaptionDraft && <button type="button" onClick={() => setImageAltDraft(imageCaptionDraft)}>{tr('Use caption as alt', '用图注填写 alt')}</button>}<button type="button" onClick={closeImageProperties}>{tr('Cancel', '取消')}</button><button type="submit">{tr('Apply', '应用')}</button></div>
+            <div className="nono-rich-editor__image-properties-actions">{imageCaptionDraft && <button type="button" onClick={() => setImageAltDraft(imageCaptionDraft)}>{tr('Use caption as alt', '一键替换ALT')}</button>}<button type="button" onClick={closeImageProperties}>{tr('Cancel', '取消')}</button><button type="submit">{tr('Apply', '应用')}</button></div>
           </form>}
         </div>}
       </div>}

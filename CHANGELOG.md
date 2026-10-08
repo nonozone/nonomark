@@ -2,6 +2,11 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.7 - 2026-10-08
+
+- Rename Chinese image-property labels to “锚文本 alt”, “图片说明（可选）”, and “一键替换ALT” in Vue and React, with consistent gallery labels.
+- Keep existing alt values when opening the panel; replacement remains an explicit action, and image descriptions stay independent.
+
 ## 0.6.6 - 2026-10-08
 
 - Fix CommonJS imports for the image extension and starter kit in both editor adapters.

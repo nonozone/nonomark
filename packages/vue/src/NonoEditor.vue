@@ -54,11 +54,11 @@
         <div v-if="selectedImage && editable && !sourceMode" class="nono-rich-editor__image-tools" :style="imageToolsStyle">
           <button type="button" class="nono-rich-editor__image-properties-button" :aria-expanded="imagePropertiesOpen" @mousedown.prevent @click="openImageProperties">{{ tr('Image properties', '图片属性') }}</button>
           <form v-if="imagePropertiesOpen" ref="imagePropertiesPanel" class="nono-rich-editor__image-properties" role="dialog" :aria-label="tr('Image properties', '图片属性')" @submit.prevent="applyImageProperties">
-            <label>{{ tr('Alternative text (alt)', '替代文本（alt）') }}<input ref="imageAltInput" v-model="imageAltDraft" :aria-label="tr('Alternative text (alt)', '替代文本（alt）')"></label>
-            <p>{{ tr('Describe the image for people who cannot see it. This text is not a visible caption.', '描述图片内容，供无法看到图片的人使用。它不会作为图注显示。') }}</p>
-            <label>{{ tr('Caption (optional)', '图注（可选）') }}<input v-model="imageCaptionDraft" :aria-label="tr('Caption (optional)', '图注（可选）')"></label>
+            <label>{{ tr('Alternative text (alt)', '锚文本 alt') }}<input ref="imageAltInput" v-model="imageAltDraft" :aria-label="tr('Alternative text (alt)', '锚文本 alt')"></label>
+            <p>{{ tr('Describe the image for people who cannot see it. This text is not a visible caption.', '描述图片内容，供无法看到图片的人使用。它不会作为图片说明显示。') }}</p>
+            <label>{{ tr('Caption (optional)', '图片说明（可选）') }}<input v-model="imageCaptionDraft" :aria-label="tr('Caption (optional)', '图片说明（可选）')"></label>
             <p>{{ tr('Shown below this image in the article.', '填写后显示在文章的图片下方。') }}</p>
-            <div class="nono-rich-editor__image-properties-actions"><button v-if="imageCaptionDraft" type="button" @click="imageAltDraft = imageCaptionDraft">{{ tr('Use caption as alt', '用图注填写 alt') }}</button><button type="button" @click="closeImageProperties">{{ tr('Cancel', '取消') }}</button><button type="submit">{{ tr('Apply', '应用') }}</button></div>
+            <div class="nono-rich-editor__image-properties-actions"><button v-if="imageCaptionDraft" type="button" @click="imageAltDraft = imageCaptionDraft">{{ tr('Use caption as alt', '一键替换ALT') }}</button><button type="button" @click="closeImageProperties">{{ tr('Cancel', '取消') }}</button><button type="submit">{{ tr('Apply', '应用') }}</button></div>
           </form>
         </div>
       </div>
@@ -79,8 +79,8 @@
               <button type="button" :disabled="index === galleryItems.length - 1" :aria-label="tr('Move right', '右移')" @click="moveGalleryItem(index, 1)">→</button>
               <button type="button" :disabled="galleryItems.length <= 2" :aria-label="tr('Remove image', '删除图片')" @click="removeGalleryItem(index)">×</button>
             </div>
-            <input v-model="item.caption" :aria-label="tr('Caption for image {count}', '第 {count} 张图的图注（可选）', { count: index + 1 })" :placeholder="tr('Image caption (optional)', '图注（可选）')">
-            <input v-model="item.alt" :aria-label="tr('Alternative text for image {count}', '第 {count} 张图的替代文本（alt）', { count: index + 1 })" :placeholder="tr('Alternative text (alt)', '替代文本（alt）')">
+            <input v-model="item.caption" :aria-label="tr('Caption for image {count}', '第 {count} 张图的图片说明（可选）', { count: index + 1 })" :placeholder="tr('Image caption (optional)', '图片说明（可选）')">
+            <input v-model="item.alt" :aria-label="tr('Alternative text for image {count}', '第 {count} 张图的锚文本 alt', { count: index + 1 })" :placeholder="tr('Alternative text (alt)', '锚文本 alt')">
           </div>
         </div>
         <input ref="galleryFileInput" class="nono-rich-editor__gallery-file" type="file" :accept="imageAccept" @change="handleGalleryUpload">

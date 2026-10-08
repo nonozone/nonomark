@@ -207,15 +207,15 @@ describe('NonoEditor integration', () => {
 
   it('edits only the selected occurrence, keeps drafts on focus, cancels, and supports undo/redo and reopen', async () => {
     const original = '![First](https://example.com/same.jpg "Title")\n![Second](https://example.com/same.jpg "Other title")';
-    const wrapper = await mountEditor({ modelValue: original }, { attachTo: document.body });
+    const wrapper = await mountEditor({ modelValue: original, locale: 'zh-CN' }, { attachTo: document.body });
     const select = async index => {
       await wrapper.findAll('.nono-rich-editor__content img')[index].trigger('mousedown', { button: 0 });
       await wrapper.find('.nono-rich-editor__image-properties-button').trigger('click');
       await nextTick();
     };
     const form = () => wrapper.find('.nono-rich-editor__image-properties');
-    const alt = () => wrapper.find('input[aria-label="Alternative text (alt)"]');
-    const caption = () => wrapper.find('input[aria-label="Caption (optional)"]');
+    const alt = () => wrapper.find('input[aria-label="锚文本 alt"]');
+    const caption = () => wrapper.find('input[aria-label="图片说明（可选）"]');
     const instance = wrapper.find('[contenteditable]').element.editor;
     await select(1);
     const beforeCancel = instance.getMarkdown();
@@ -225,10 +225,10 @@ describe('NonoEditor integration', () => {
     caption().element.focus();
     await nextTick();
     expect(alt().element.value).toBe('Draft');
-    await form().findAll('button').find(node => node.text() === 'Use caption as alt').trigger('click');
+    await form().findAll('button').find(node => node.text() === '一键替换ALT').trigger('click');
     expect(alt().element.value).toBe('Draft caption');
     expect(caption().element.value).toBe('Draft caption');
-    await form().findAll('button').find(node => node.text() === 'Cancel').trigger('click');
+    await form().findAll('button').find(node => node.text() === '取消').trigger('click');
     expect(instance.getMarkdown()).toBe(beforeCancel);
     await select(1);
     await alt().setValue('Esc draft');

@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor-react",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "The official React adapter for nonoMark.",
   "type": "module",
   "license": "MIT",
@@ -32,7 +32,7 @@
     "./style.css": "./dist/editor-react.css"
   },
   "dependencies": {
-    "@nonoim/editor-core": "0.6.6",
+    "@nonoim/editor-core": "0.6.7",
     "@tiptap/core": "3.29.2",
     "@tiptap/extension-image": "3.29.2",
     "@tiptap/extension-table": "3.29.2",

@@ -80,7 +80,7 @@ describe('React NonoEditor', () => {
 
   it('keeps image drafts and occurrence attributes independent through undo and save/reopen', async () => {
     const onChange = vi.fn();
-    const container = await renderEditor({ value: '![One](/same.jpg "First title")\n![Two](/same.jpg "Second title")', onChange });
+    const container = await renderEditor({ value: '![One](/same.jpg "First title")\n![Two](/same.jpg "Second title")', onChange, locale: 'zh-CN' });
     const click = element => act(async () => element.click());
     const field = label => container.querySelector(`input[aria-label="${label}"]`);
     const fill = async (element, value) => act(async () => {
@@ -95,23 +95,23 @@ describe('React NonoEditor', () => {
     const submit = () => act(async () => container.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
     const instance = container.querySelector('[contenteditable]').editor;
     await open();
-    expect(field('Alternative text (alt)').value).toBe('Two');
-    await fill(field('Caption (optional)'), 'Visible caption');
-    expect(field('Alternative text (alt)').value).toBe('Two');
-    await act(async () => field('Alternative text (alt)').focus());
-    expect(field('Caption (optional)').value).toBe('Visible caption');
-    await click(button('Use caption as alt'));
-    expect(field('Alternative text (alt)').value).toBe('Visible caption');
-    await click(button('Cancel'));
+    expect(field('锚文本 alt').value).toBe('Two');
+    await fill(field('图片说明（可选）'), 'Visible caption');
+    expect(field('锚文本 alt').value).toBe('Two');
+    await act(async () => field('锚文本 alt').focus());
+    expect(field('图片说明（可选）').value).toBe('Visible caption');
+    await click(button('一键替换ALT'));
+    expect(field('锚文本 alt').value).toBe('Visible caption');
+    await click(button('取消'));
     expect(container.querySelector('figcaption')).toBeNull();
     await open();
-    await fill(field('Alternative text (alt)'), 'Esc draft');
-    await act(async () => field('Alternative text (alt)').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    await fill(field('锚文本 alt'), 'Esc draft');
+    await act(async () => field('锚文本 alt').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
     expect(container.querySelector('form')).toBeNull();
     await open();
-    expect(field('Alternative text (alt)').value).toBe('Two');
-    await fill(field('Alternative text (alt)'), '');
-    await fill(field('Caption (optional)'), 'Visible caption');
+    expect(field('锚文本 alt').value).toBe('Two');
+    await fill(field('锚文本 alt'), '');
+    await fill(field('图片说明（可选）'), 'Visible caption');
     await submit();
     expect(Array.from(container.querySelectorAll('.nono-rich-editor__content img')).map(image => image.alt)).toEqual(['One', '']);
     expect(container.querySelector('figcaption').textContent).toBe('Visible caption');
