@@ -1,3 +1,14 @@
+.nono-rich-editor__toolbar-more { display: none; }
+.nono-rich-editor__host-tools { display: contents; }
+@media (max-width: 720px) {
+  .nono-rich-editor__toolbar:not(.is-expanded) .nono-rich-editor__secondary-tool { display: none; }
+  .nono-rich-editor__toolbar .nono-rich-editor__toolbar-more { display: inline-flex; width: auto; padding: 0 10px; }
+  .nono-rich-editor__toolbar .nono-rich-editor__button,
+  .nono-rich-editor__toolbar .nono-rich-editor__icon { min-height: 44px; }
+  .nono-rich-editor__toolbar .nono-rich-editor__group--menu { position: static; }
+  .nono-rich-editor__toolbar .nono-rich-editor__link-panel { left: 9px; }
+}
+
 .nono-rich-editor__content .nono-image-gallery {
   display: grid;
   gap: 12px;

@@ -2,6 +2,12 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.9 - 2026-10-08
+
+- Keep the formatting toolbar visible while scrolling long articles on desktop and mobile, fixing the shell overflow that prevented page sticky positioning.
+- Add `--nono-editor-toolbar-top` for fixed CMS navigation, while respecting the editor and scrolling-container boundaries.
+- Collapse secondary mobile tools into More, retaining text selections, source drafts and host toolbar extensions in Vue and React; keep link panels within narrow screens.
+
 ## 0.6.8 - 2026-10-08
 
 - Preserve 2/3/4-image galleries as explicit editor groups, keeping single-newline Markdown images together and blank-line-separated images independent.

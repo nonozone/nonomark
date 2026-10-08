@@ -298,8 +298,13 @@ Import `@nonoim/editor/style.css`. The main theme variables can be overridden on
   --nono-editor-heading: #18181b;
   --nono-editor-text: #27272a;
   --nono-editor-muted: #71717a;
+  --nono-editor-toolbar-top: 0px;
 }
 ```
+
+The toolbar stays at the top of the page or its nearest scrolling container while the editor is visible. On phones, common actions remain visible and **More** expands the other tools, including host toolbar extensions. Escape collapses them without discarding the editing selection or source draft.
+
+For a page with a fixed CMS header, set `--nono-editor-toolbar-top` to the header height plus any desired gap (for example, `72px`). The offset is relative to the scrolling container: if that container already starts below the header, keep `0px`. Host ancestors using `overflow: hidden` can prevent page scrolling from activating sticky positioning; use `overflow: clip` when only rounded-corner clipping is needed.
 
 ## Development
 
