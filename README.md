@@ -11,6 +11,7 @@ Try the distraction-free editor at [nonozone.github.io/nonomark](https://nonozon
 | Package | Purpose |
 | --- | --- |
 | `@nonoim/editor-core` | Framework-independent Markdown, recovery backup and image upload contracts |
+| `@nonoim/editor-js` | Standalone browser editor for plain JavaScript projects |
 | `@nonoim/editor-vue` | Official Vue 3 editor |
 | `@nonoim/editor-react` | Official React editor |
 | `@nonoim/editor` | Compatibility package for existing Vue projects |
@@ -55,6 +56,26 @@ export function ArticleEditor() {
 ```
 
 React uses `value`/`onChange`; Vue uses `v-model`. Both adapters share Markdown protection and the same `uploadImages` contract.
+
+## Plain JavaScript browser projects
+
+Projects that do not use Node, Vue or React can mount the bundled browser editor with ordinary JavaScript:
+
+```html
+<div id="editor"></div>
+<script src="https://cdn.jsdelivr.net/npm/@nonoim/editor-js/dist/editor-js.iife.js"></script>
+<script>
+  const editor = NonoEditorJS.createNonoEditor('#editor', {
+    value: '## Hello',
+    locale: 'zh-CN',
+    onChange: markdown => console.log(markdown),
+  });
+
+  window.saveMarkdown = () => editor.getValue();
+</script>
+```
+
+The package also exposes the same API as an ESM import for projects that use browser modules. `createNonoEditor` accepts a selector or DOM element and returns `getValue()`, `setValue(markdown)`, `focus()`, and `destroy()` methods. The IIFE and ESM builds include the editor styles and do not require a framework runtime in the host page. See [`packages/js/README.md`](packages/js/README.md) for all options and callbacks.
 
 ## Faster first render
 

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost' });
@@ -35,6 +36,46 @@ for (const name of ['@nonoim/editor-core', '@nonoim/editor-vue', '@nonoim/editor
     assert.match(readFileSync(require.resolve(`${name}/style.css`), 'utf8'), /nono-rich-editor__image-properties/);
   });
 }
+
+test('@nonoim/editor-js exposes a standalone browser mount API', async () => {
+  const plain = await import('@nonoim/editor-js');
+  assert.equal(typeof plain.createNonoEditor, 'function');
+  const host = document.createElement('div');
+  document.body.append(host);
+  const changes = [];
+  const editor = plain.createNonoEditor(host, { value: '## Hello', onChange: value => changes.push(value) });
+  try {
+    assert.equal(editor.getValue(), '## Hello');
+    editor.setValue('## Updated');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(editor.getValue(), '## Updated');
+    assert.ok(host.querySelector('.nono-rich-editor'));
+    assert.ok(document.head.querySelector('style[data-nono-editor="editor-js"]'));
+    editor.focus();
+  } finally {
+    editor.destroy();
+    host.remove();
+  }
+  assert.deepEqual(changes, []);
+});
+
+test('@nonoim/editor-js IIFE runs without a bundler or process global', () => {
+  const context = vm.createContext(new JSDOM('<!doctype html><html><head></head><body></body></html>', { url: 'http://localhost' }).window);
+  context.console = console;
+  context.setTimeout = setTimeout;
+  context.clearTimeout = clearTimeout;
+  vm.runInContext(readFileSync(new URL('../packages/js/dist/editor-js.iife.js', import.meta.url), 'utf8'), context);
+  assert.equal(typeof context.NonoEditorJS.createNonoEditor, 'function');
+  const host = context.document.createElement('div');
+  context.document.body.append(host);
+  const editor = context.NonoEditorJS.createNonoEditor(host, { value: '## IIFE' });
+  try {
+    assert.equal(editor.getValue(), '## IIFE');
+    assert.ok(context.document.head.querySelector('style[data-nono-editor="editor-js"]'));
+  } finally {
+    editor.destroy();
+  }
+});
 
 const markdown = 'Before\n\n![First](/same.jpg "First title")\n![Second](/same.jpg "Second title")\n\nAfter';
 const field = (host, label) => host.querySelector(`input[aria-label="${label}"]`);

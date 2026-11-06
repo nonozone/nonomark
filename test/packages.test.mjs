@@ -6,6 +6,7 @@ const readPackage = (name) => JSON.parse(readFileSync(new URL(`../packages/${nam
 
 test('framework packages have explicit dependency boundaries', () => {
   const core = readPackage('core');
+  const plain = readPackage('js');
   const vue = readPackage('vue');
   const react = readPackage('react');
   const compat = readPackage('editor');
@@ -13,6 +14,11 @@ test('framework packages have explicit dependency boundaries', () => {
   assert.equal(core.name, '@nonoim/editor-core');
   assert.equal(core.dependencies, undefined);
   assert.equal(core.peerDependencies, undefined);
+
+  assert.equal(plain.name, '@nonoim/editor-js');
+  assert.equal(plain.version, core.version);
+  assert.equal(plain.peerDependencies, undefined);
+  assert.equal(plain.sideEffects, false);
 
   assert.equal(vue.name, '@nonoim/editor-vue');
   assert.equal(vue.version, core.version);
@@ -33,7 +39,7 @@ test('framework packages have explicit dependency boundaries', () => {
   assert.equal(compat.dependencies['@nonoim/editor-vue'], vue.version);
   assert.equal(compat.dependencies['@nonoim/editor-core'], core.version);
 
-  for (const pkg of [core, vue, react, compat]) {
+  for (const pkg of [core, plain, vue, react, compat]) {
     assert.equal(pkg.scripts.prepack, 'npm run build');
   }
 });

@@ -50,6 +50,7 @@ All four packages (`@nonoim/editor-core`, `@nonoim/editor-vue`, `@nonoim/editor-
 
 ## Unreleased
 
+- Add `@nonoim/editor-js`, a standalone browser build with `createNonoEditor()` for plain JavaScript projects. It provides ESM and IIFE files, bundled styles, Markdown value accessors and the same host upload/import callbacks as the framework adapters.
 - Convert the repository to a private npm-workspaces monorepo with `apps/` and `packages/` boundaries.
 - Add framework-independent `@nonoim/editor-core`.
 - Add official `@nonoim/editor-vue` and `@nonoim/editor-react` packages with shared visual and upload behavior.
