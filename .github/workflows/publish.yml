@@ -25,7 +25,7 @@ jobs:
       - run: npm run check
       - name: Publish workspace packages
         run: |
-          for pkg in "@nonoim/editor-core" "@nonoim/editor-vue" "@nonoim/editor-react" "@nonoim/editor"; do
+          for pkg in "@nonoim/editor-core" "@nonoim/editor-js" "@nonoim/editor-vue" "@nonoim/editor-react" "@nonoim/editor"; do
             echo "Publishing $pkg..."
             npm publish --workspace "$pkg" --access public --provenance || true
           done
