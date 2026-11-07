@@ -2,6 +2,13 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.10 - 2026-11-07
+
+- Replace plain text toolbar symbols with consistent 16x16 vector SVG icons (undo, redo, table, lists, quote, code, link, image upload, gallery).
+- Adopt an icon-first compact toolbar layout, hiding redundant text labels to reduce horizontal width by ~50% and prevent line wrapping.
+- Slim down toolbar height to a clean 38px and standardize button sizes to 28x28px, significantly saving vertical space.
+- Include `@nonoim/editor-js` in automated provenance-enabled workspace releases.
+
 ## 0.6.9 - 2026-10-08
 
 - Keep the formatting toolbar visible while scrolling long articles on desktop and mobile, fixing the shell overflow that prevented page sticky positioning.

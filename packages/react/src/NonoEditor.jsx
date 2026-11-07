@@ -245,13 +245,56 @@ export function NonoEditor({
   return <div className={cx('nono-rich-editor', fill && 'nono-rich-editor--fill', disabled && 'is-disabled', readOnly && 'is-readonly')} onKeyDown={event => { if (event.key === 'Escape') closeToolbarMore(); }}>
     <div className={cx('nono-rich-editor__shell', focused && 'is-focused')}>
       {editor && <div className={cx('nono-rich-editor__toolbar', toolbarMoreOpen && 'is-expanded')} role="toolbar" aria-label={tr('Formatting tools', '格式工具')}>
-        <div className="nono-rich-editor__group"><button type="button" className="nono-rich-editor__button" disabled={!editable || sourceMode || !editor.can().undo()} onClick={() => command('undo')}>↶ <span>{tr('Undo', '撤销')}</span></button><button type="button" className="nono-rich-editor__button" disabled={!editable || sourceMode || !editor.can().redo()} onClick={() => command('redo')}>↷ <span>{tr('Redo', '重做')}</span></button></div>
+        <div className="nono-rich-editor__group">
+          <button type="button" className="nono-rich-editor__button" disabled={!editable || sourceMode || !editor.can().undo()} title={tr('Undo', '撤销')} onClick={() => command('undo')}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5h7a3.5 3.5 0 0 1 3.5 3.5v0a3.5 3.5 0 0 1-3.5 3.5H6" /><path d="M6.5 4L4 6.5l2.5 2.5" /></svg>
+            <span className="nono-rich-editor__label">{tr('Undo', '撤销')}</span>
+          </button>
+          <button type="button" className="nono-rich-editor__button" disabled={!editable || sourceMode || !editor.can().redo()} title={tr('Redo', '重做')} onClick={() => command('redo')}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M12 6.5H5a3.5 3.5 0 0 0-3.5 3.5v0A3.5 3.5 0 0 0 5 13.5h5" /><path d="M9.5 4l2.5 2.5-2.5 2.5" /></svg>
+            <span className="nono-rich-editor__label">{tr('Redo', '重做')}</span>
+          </button>
+        </div>
         <div className="nono-rich-editor__group nono-rich-editor__secondary-tool"><select className="nono-rich-editor__select" disabled={!editable} aria-label={tr('Text style', '文字样式')} value={active('heading', { level: 2 }) ? '2' : active('heading', { level: 3 }) ? '3' : active('heading', { level: 4 }) ? '4' : 'p'} onChange={(event) => sourceMode ? prefixLines(() => event.target.value === 'p' ? '' : `${'#'.repeat(Number(event.target.value))} `, true) : event.target.value === 'p' ? editor.chain().focus().setParagraph().run() : editor.chain().focus().setHeading({ level: Number(event.target.value) }).run()}><option value="p">{tr('Paragraph', '正文')}</option><option value="2">{tr('Heading 2', '标题 2')}</option><option value="3">{tr('Heading 3', '标题 3')}</option><option value="4">{tr('Heading 4', '标题 4')}</option></select></div>
         <div className="nono-rich-editor__group">{[['bold', 'B', 'Bold', '粗体'], ['italic', 'I', 'Italic', '斜体'], ['strike', 'S', 'Strikethrough', '删除线']].map(([name, label, en, zh]) => <button key={name} type="button" className={cx('nono-rich-editor__icon', `is-${name}`, name === 'strike' && 'nono-rich-editor__secondary-tool', active(name) && 'is-active')} disabled={!editable} title={tr(en, zh)} onClick={() => mark(name)}>{label}</button>)}</div>
-        <div className="nono-rich-editor__group nono-rich-editor__secondary-tool"><button type="button" className="nono-rich-editor__button" disabled={!editable} onClick={() => sourceMode ? insertSourceBlock('| Column 1 | Column 2 | Column 3 |\n| --- | --- | --- |\n|  |  |  |\n|  |  |  |') : editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>▦ <span>{tr('Table', '表格')}</span></button></div>
-        <div className="nono-rich-editor__group nono-rich-editor__secondary-tool"><button type="button" className="nono-rich-editor__icon" disabled={!editable} onClick={() => command('toggleBulletList')}>•</button><button type="button" className="nono-rich-editor__icon is-small" disabled={!editable} onClick={() => command('toggleOrderedList')}>1.</button><button type="button" className="nono-rich-editor__icon" disabled={!editable} onClick={() => command('toggleBlockquote')}>“</button><button type="button" className="nono-rich-editor__icon is-code" disabled={!editable} onClick={() => mark('code')}>&lt;/&gt;</button></div>
-        <div className="nono-rich-editor__group nono-rich-editor__group--menu"><button type="button" className={cx('nono-rich-editor__button', (active('link') || linkOpen) && 'is-active')} disabled={!editable} onClick={() => { setLinkDraft(sourceMode ? '' : (editor.getAttributes('link').href || '')); setLinkOpen(true); }}>↗ <span>{tr('Link', '链接')}</span></button>{linkOpen && <div className="nono-rich-editor__link-panel"><label><span>{tr('Link URL', '链接地址')}</span><input aria-label={tr('Link URL', '链接地址')} value={linkDraft} onChange={(event) => setLinkDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') applyLink(); if (event.key === 'Escape') setLinkOpen(false); }} /></label><div><button type="button" onClick={() => applyLink()}>{tr('Apply', '应用')}</button><button type="button" className="is-danger" onClick={() => applyLink('')}>{tr('Remove', '移除')}</button></div></div>}{uploadImages && <label className={cx('nono-rich-editor__button', 'nono-rich-editor__upload', 'nono-rich-editor__secondary-tool', uploading && 'is-disabled')}>↑ <span>{uploading ? tr('Uploading...', '上传中...') : tr('Upload', '上传')}</span><input type="file" accept={imageAccept} disabled={!editable || uploading} multiple onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ''; }} /></label>}</div>
-        <div className="nono-rich-editor__group"><button type="button" className={cx('nono-rich-editor__button', sourceMode && 'is-active')} disabled={disabled} onClick={toggleSource}>MD <span>{sourceMode ? tr('Visual', '可视化') : tr('Source', '源码')}</span></button></div>
+        <div className="nono-rich-editor__group nono-rich-editor__secondary-tool">
+          <button type="button" className="nono-rich-editor__button" disabled={!editable} title={tr('Table', '表格')} onClick={() => sourceMode ? insertSourceBlock('| Column 1 | Column 2 | Column 3 |\n| --- | --- | --- |\n|  |  |  |\n|  |  |  |') : editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5" /><path d="M2 6.5h12M2 10.5h12M6 2.5v11M10 2.5v11" /></svg>
+            <span className="nono-rich-editor__label">{tr('Table', '表格')}</span>
+          </button>
+        </div>
+        <div className="nono-rich-editor__group nono-rich-editor__secondary-tool">
+          <button type="button" className="nono-rich-editor__icon" disabled={!editable} title={tr('Bullet list', '项目列表')} onClick={() => command('toggleBulletList')}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 4h7M6.5 8h7M6.5 12h7" /><circle cx="3" cy="4" r="1.2" fill="currentColor" stroke="none" /><circle cx="3" cy="8" r="1.2" fill="currentColor" stroke="none" /><circle cx="3" cy="12" r="1.2" fill="currentColor" stroke="none" /></svg>
+          </button>
+          <button type="button" className="nono-rich-editor__icon" disabled={!editable} title={tr('Numbered list', '编号列表')} onClick={() => command('toggleOrderedList')}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M7 4h6.5M7 8h6.5M7 12h6.5" /><path d="M2.5 2.5l1-.5v3.5M2 5.5h2" strokeWidth="1.3" /><path d="M2 8.2a1 1 0 0 1 1-1h.2a1 1 0 0 1 1 1c0 .6-.7 1-1.7 1.6h1.7" strokeWidth="1.2" /><path d="M2 11.7h1.5a.8.8 0 0 1 .7.8c0 .5-.4.8-.8.8h-.4.4c.5 0 .8.4.8.8a.8.8 0 0 1-.8.8H2" strokeWidth="1.2" /></svg>
+          </button>
+          <button type="button" className="nono-rich-editor__icon" disabled={!editable} title={tr('Quote', '引用')} onClick={() => command('toggleBlockquote')}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 9.5c0-1.8 1-3.2 2.6-3.8V4.3C3.5 5 2 7 2 9.5h3.2v4H2v-4h1.2zm6.2 0c0-1.8 1-3.2 2.6-3.8V4.3C9.7 5 8.2 7 8.2 9.5h3.2v4H8.2v-4h1.2z" fill="currentColor" stroke="none" /></svg>
+          </button>
+          <button type="button" className="nono-rich-editor__icon is-code" disabled={!editable} title={tr('Inline code', '行内代码')} onClick={() => mark('code')}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5L2 8l3 3M11 5l3 3-3 3M9.5 3.5l-3 9" /></svg>
+          </button>
+        </div>
+        <div className="nono-rich-editor__group nono-rich-editor__group--menu">
+          <button type="button" className={cx('nono-rich-editor__button', (active('link') || linkOpen) && 'is-active')} disabled={!editable} title={tr('Link', '链接')} onClick={() => { setLinkDraft(sourceMode ? '' : (editor.getAttributes('link').href || '')); setLinkOpen(true); }}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5L7 4M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5L9 12" /></svg>
+            <span className="nono-rich-editor__label">{tr('Link', '链接')}</span>
+          </button>
+          {linkOpen && <div className="nono-rich-editor__link-panel"><label><span>{tr('Link URL', '链接地址')}</span><input aria-label={tr('Link URL', '链接地址')} value={linkDraft} onChange={(event) => setLinkDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') applyLink(); if (event.key === 'Escape') setLinkOpen(false); }} /></label><div><button type="button" onClick={() => applyLink()}>{tr('Apply', '应用')}</button><button type="button" className="is-danger" onClick={() => applyLink('')}>{tr('Remove', '移除')}</button></div></div>}
+          {uploadImages && <label className={cx('nono-rich-editor__button', 'nono-rich-editor__upload', 'nono-rich-editor__secondary-tool', uploading && 'is-disabled')} title={tr('Upload image', '上传图片')}>
+            <svg className="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2" /><path d="M8 10.5V5.5m0 0l-2 2m2-2l2 2M5 11.5h6" /></svg>
+            <span className="nono-rich-editor__label">{uploading ? tr('Uploading...', '上传中...') : tr('Upload', '上传')}</span>
+            <input type="file" accept={imageAccept} disabled={!editable || uploading} multiple onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ''; }} />
+          </label>}
+        </div>
+        <div className="nono-rich-editor__group">
+          <button type="button" className={cx('nono-rich-editor__button', 'nono-rich-editor__source-toggle', 'is-labeled', sourceMode && 'is-active')} disabled={disabled} title={sourceMode ? tr('Switch to visual editor', '切换为可视化编辑') : tr('Switch to Markdown source', '切换为 Markdown 源码')} onClick={toggleSource}>
+            <span className="nono-rich-editor__source-badge">MD</span>
+            <span>{sourceMode ? tr('Visual', '可视化') : tr('Source', '源码')}</span>
+          </button>
+        </div>
         <div className="nono-rich-editor__host-tools nono-rich-editor__secondary-tool">{toolbarEnd}</div>
         <button type="button" className="nono-rich-editor__button nono-rich-editor__toolbar-more" aria-label={tr('More tools', '更多工具')} aria-expanded={toolbarMoreOpen} onMouseDown={event => event.preventDefault()} onClick={() => toolbarMoreOpen ? closeToolbarMore() : setToolbarMoreOpen(true)}>{toolbarMoreOpen ? tr('Less', '收起') : tr('More', '更多')}</button>
       </div>}

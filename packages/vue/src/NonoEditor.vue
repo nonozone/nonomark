@@ -3,8 +3,14 @@
     <div class="nono-rich-editor__shell" :class="{ 'is-focused': focused }">
       <div v-if="editor" class="nono-rich-editor__toolbar" :class="{ 'is-expanded': toolbarMoreOpen }" role="toolbar" :aria-label="tr('Formatting tools', '格式工具')">
         <div class="nono-rich-editor__group">
-          <button type="button" class="nono-rich-editor__button" :disabled="!editable || sourceMode || !canUndo" :title="tr('Undo', '撤销')" @click="command('undo')">↶ <span>{{ tr('Undo', '撤销') }}</span></button>
-          <button type="button" class="nono-rich-editor__button" :disabled="!editable || sourceMode || !canRedo" :title="tr('Redo', '重做')" @click="command('redo')">↷ <span>{{ tr('Redo', '重做') }}</span></button>
+          <button type="button" class="nono-rich-editor__button" :disabled="!editable || sourceMode || !canUndo" :title="tr('Undo', '撤销')" @click="command('undo')">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5h7a3.5 3.5 0 0 1 3.5 3.5v0a3.5 3.5 0 0 1-3.5 3.5H6" /><path d="M6.5 4L4 6.5l2.5 2.5" /></svg>
+            <span class="nono-rich-editor__label">{{ tr('Undo', '撤销') }}</span>
+          </button>
+          <button type="button" class="nono-rich-editor__button" :disabled="!editable || sourceMode || !canRedo" :title="tr('Redo', '重做')" @click="command('redo')">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M12 6.5H5a3.5 3.5 0 0 0-3.5 3.5v0A3.5 3.5 0 0 0 5 13.5h5" /><path d="M9.5 4l2.5 2.5-2.5 2.5" /></svg>
+            <span class="nono-rich-editor__label">{{ tr('Redo', '重做') }}</span>
+          </button>
         </div>
         <div class="nono-rich-editor__group nono-rich-editor__secondary-tool">
           <select class="nono-rich-editor__select" :disabled="!editable" :aria-label="tr('Text style', '文字样式')" :value="activeBlock" @change="setBlock">
@@ -18,7 +24,10 @@
         </div>
         <div class="nono-rich-editor__group nono-rich-editor__group--menu nono-rich-editor__secondary-tool">
           <details ref="tableMenu" class="nono-rich-editor__table-menu">
-            <summary class="nono-rich-editor__button" :class="{ 'is-active': active('table') }">▦ <span>{{ tr('Table', '表格') }}</span>⌄</summary>
+            <summary class="nono-rich-editor__button" :class="{ 'is-active': active('table') }" :title="tr('Table', '表格')">
+              <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.5" /><path d="M2 6.5h12M2 10.5h12M6 2.5v11M10 2.5v11" /></svg>
+              <span class="nono-rich-editor__label">{{ tr('Table', '表格') }}</span>
+            </summary>
             <div class="nono-rich-editor__table-panel" role="menu" :aria-label="tr('Table tools', '表格工具')">
               <button type="button" class="nono-rich-editor__table-action is-wide" :disabled="!editable || (!sourceMode && active('table'))" @click="insertTable">▦ {{ tr('Insert 3 × 3 table', '插入 3 × 3 表格') }}</button>
               <div class="nono-rich-editor__divider"></div>
@@ -31,18 +40,44 @@
           </details>
         </div>
         <div class="nono-rich-editor__group nono-rich-editor__secondary-tool">
-          <button type="button" class="nono-rich-editor__icon" :disabled="!editable" :class="{ 'is-active': active('bulletList') }" :title="tr('Bullet list', '项目列表')" @click="command('toggleBulletList')">•</button><button type="button" class="nono-rich-editor__icon is-small" :disabled="!editable" :class="{ 'is-active': active('orderedList') }" :title="tr('Numbered list', '编号列表')" @click="command('toggleOrderedList')">1.</button><button type="button" class="nono-rich-editor__icon" :disabled="!editable" :class="{ 'is-active': active('blockquote') }" :title="tr('Quote', '引用')" @click="command('toggleBlockquote')">“</button><button type="button" class="nono-rich-editor__icon is-code" :disabled="!editable" :class="{ 'is-active': active('code') }" :title="tr('Inline code', '行内代码')" @click="toggleMark('code')">&lt;/&gt;</button>
+          <button type="button" class="nono-rich-editor__icon" :disabled="!editable" :class="{ 'is-active': active('bulletList') }" :title="tr('Bullet list', '项目列表')" @click="command('toggleBulletList')">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 4h7M6.5 8h7M6.5 12h7" /><circle cx="3" cy="4" r="1.2" fill="currentColor" stroke="none" /><circle cx="3" cy="8" r="1.2" fill="currentColor" stroke="none" /><circle cx="3" cy="12" r="1.2" fill="currentColor" stroke="none" /></svg>
+          </button>
+          <button type="button" class="nono-rich-editor__icon" :disabled="!editable" :class="{ 'is-active': active('orderedList') }" :title="tr('Numbered list', '编号列表')" @click="command('toggleOrderedList')">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M7 4h6.5M7 8h6.5M7 12h6.5" /><path d="M2.5 2.5l1-.5v3.5M2 5.5h2" stroke-width="1.3" /><path d="M2 8.2a1 1 0 0 1 1-1h.2a1 1 0 0 1 1 1c0 .6-.7 1-1.7 1.6h1.7" stroke-width="1.2" /><path d="M2 11.7h1.5a.8.8 0 0 1 .7.8c0 .5-.4.8-.8.8h-.4.4c.5 0 .8.4.8.8a.8.8 0 0 1-.8.8H2" stroke-width="1.2" /></svg>
+          </button>
+          <button type="button" class="nono-rich-editor__icon" :disabled="!editable" :class="{ 'is-active': active('blockquote') }" :title="tr('Quote', '引用')" @click="command('toggleBlockquote')">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 9.5c0-1.8 1-3.2 2.6-3.8V4.3C3.5 5 2 7 2 9.5h3.2v4H2v-4h1.2zm6.2 0c0-1.8 1-3.2 2.6-3.8V4.3C9.7 5 8.2 7 8.2 9.5h3.2v4H8.2v-4h1.2z" fill="currentColor" stroke="none" /></svg>
+          </button>
+          <button type="button" class="nono-rich-editor__icon is-code" :disabled="!editable" :class="{ 'is-active': active('code') }" :title="tr('Inline code', '行内代码')" @click="toggleMark('code')">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5L2 8l3 3M11 5l3 3-3 3M9.5 3.5l-3 9" /></svg>
+          </button>
         </div>
         <div class="nono-rich-editor__group nono-rich-editor__group--menu">
-          <button type="button" class="nono-rich-editor__button" :disabled="!editable" :class="{ 'is-active': active('link') || linkOpen }" @click="editLink">↗ <span>{{ tr('Link', '链接') }}</span></button>
+          <button type="button" class="nono-rich-editor__button" :disabled="!editable" :class="{ 'is-active': active('link') || linkOpen }" :title="tr('Link', '链接')" @click="editLink">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5L7 4M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5L9 12" /></svg>
+            <span class="nono-rich-editor__label">{{ tr('Link', '链接') }}</span>
+          </button>
           <div v-if="linkOpen" ref="linkPanel" class="nono-rich-editor__link-panel" @keydown.esc="closeLink">
             <label><span>{{ tr('Link URL', '链接地址') }}</span><input ref="linkInput" v-model="linkDraft" :aria-label="tr('Link URL', '链接地址')" type="url" placeholder="https://" @keydown.enter.prevent="applyLink"></label>
             <div><button type="button" @click="applyLink">{{ tr('Apply', '应用') }}</button><button type="button" class="is-danger" @click="removeLink">{{ tr('Remove', '移除') }}</button></div>
           </div>
-          <label v-if="uploadImages" class="nono-rich-editor__button nono-rich-editor__upload nono-rich-editor__secondary-tool" :class="{ 'is-disabled': uploading || !editable }">↑ <span>{{ uploading ? uploadButtonText : tr('Upload', '上传') }}</span><input type="file" :accept="imageAccept" :disabled="uploading || !editable" multiple @change="handleUpload"></label>
-          <button v-if="enableGallery" type="button" class="nono-rich-editor__button nono-rich-editor__secondary-tool" :disabled="!editable" :title="tr('Gallery', '图册')" @click="openGallery"><svg class="nono-rich-editor__gallery-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3" width="6" height="6" rx="1"></rect><rect x="11.5" y="3" width="6" height="6" rx="1"></rect><rect x="2.5" y="11" width="6" height="6" rx="1"></rect><rect x="11.5" y="11" width="6" height="6" rx="1"></rect></svg><span>{{ tr('Gallery', '图册') }}</span></button>
+          <label v-if="uploadImages" class="nono-rich-editor__button nono-rich-editor__upload nono-rich-editor__secondary-tool" :class="{ 'is-disabled': uploading || !editable }" :title="tr('Upload image', '上传图片')">
+            <svg class="nono-rich-editor__svg-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2" /><path d="M8 10.5V5.5m0 0l-2 2m2-2l2 2M5 11.5h6" /></svg>
+            <span class="nono-rich-editor__label">{{ uploading ? uploadButtonText : tr('Upload', '上传') }}</span>
+            <input type="file" :accept="imageAccept" :disabled="uploading || !editable" multiple @change="handleUpload">
+          </label>
+          <button v-if="enableGallery" type="button" class="nono-rich-editor__button nono-rich-editor__secondary-tool" :disabled="!editable" :title="tr('Gallery', '图册')" @click="openGallery">
+            <svg class="nono-rich-editor__svg-icon nono-rich-editor__gallery-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="5.2" height="5.2" rx="1" /><rect x="8.8" y="2.5" width="5.2" height="5.2" rx="1" /><rect x="2" y="8.8" width="5.2" height="5.2" rx="1" /><rect x="8.8" y="8.8" width="5.2" height="5.2" rx="1" /></svg>
+            <span class="nono-rich-editor__label">{{ tr('Gallery', '图册') }}</span>
+          </button>
         </div>
-        <div class="nono-rich-editor__group"><button type="button" class="nono-rich-editor__button" :disabled="disabled" :class="{ 'is-active': sourceMode }" :aria-pressed="sourceMode" @click="toggleSource">MD <span>{{ sourceMode ? tr('Visual', '可视化') : tr('Source', '源码') }}</span></button></div>
+        <div class="nono-rich-editor__group">
+          <button type="button" class="nono-rich-editor__button nono-rich-editor__source-toggle is-labeled" :disabled="disabled" :class="{ 'is-active': sourceMode }" :aria-pressed="sourceMode" :title="sourceMode ? tr('Switch to visual editor', '切换为可视化编辑') : tr('Switch to Markdown source', '切换为 Markdown 源码')" @click="toggleSource">
+            <span class="nono-rich-editor__source-badge">MD</span>
+            <span>{{ sourceMode ? tr('Visual', '可视化') : tr('Source', '源码') }}</span>
+          </button>
+        </div>
         <div class="nono-rich-editor__host-tools nono-rich-editor__secondary-tool"><slot name="toolbar-end"></slot></div>
         <button type="button" class="nono-rich-editor__button nono-rich-editor__toolbar-more" :aria-label="tr('More tools', '更多工具')" :aria-expanded="toolbarMoreOpen" @mousedown.prevent @click="toggleToolbarMore">{{ toolbarMoreOpen ? tr('Less', '收起') : tr('More', '更多') }}</button>
       </div>

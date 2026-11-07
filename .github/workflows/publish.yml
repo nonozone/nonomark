@@ -23,6 +23,7 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm publish --workspace @nonoim/editor-core --access public --provenance
+      - run: npm publish --workspace @nonoim/editor-js --access public --provenance
       - run: npm publish --workspace @nonoim/editor-vue --access public --provenance
       - run: npm publish --workspace @nonoim/editor-react --access public --provenance
       - run: npm publish --workspace @nonoim/editor --access public --provenance

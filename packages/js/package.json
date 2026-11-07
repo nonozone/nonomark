@@ -1,6 +1,6 @@
 {
   "name": "@nonoim/editor-js",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "Standalone browser Markdown editor for non-Node projects.",
   "type": "module",
   "license": "MIT",
