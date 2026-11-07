@@ -1,6 +1,9 @@
 import { createApp, h, ref } from 'vue';
 import NonoEditor from '../../vue/src/NonoEditor.vue';
-import editorStyles from '../../vue/src/style.css?inline';
+import baseStyles from '../../vue/src/style.css?inline';
+import interactionStyles from '../../vue/src/interaction.css?inline';
+
+const editorStyles = `${baseStyles}\n${interactionStyles}`;
 
 const PROP_NAMES = [
   'placeholder', 'rows', 'help', 'fill', 'disabled', 'readonly', 'autofocus',

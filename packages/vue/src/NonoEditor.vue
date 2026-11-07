@@ -67,7 +67,7 @@
             <span class="nono-rich-editor__label">{{ uploading ? uploadButtonText : tr('Upload', '上传') }}</span>
             <input type="file" :accept="imageAccept" :disabled="uploading || !editable" multiple @change="handleUpload">
           </label>
-          <button v-if="enableGallery" type="button" class="nono-rich-editor__button nono-rich-editor__secondary-tool" :disabled="!editable" :title="tr('Gallery', '图册')" @click="openGallery">
+          <button v-if="enableGallery" type="button" class="nono-rich-editor__button nono-rich-editor__secondary-tool" :disabled="!editable" :title="tr('Gallery', '图册')" @mousedown.prevent="openGallery" @click="openGallery">
             <svg class="nono-rich-editor__svg-icon nono-rich-editor__gallery-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="5.2" height="5.2" rx="1" /><rect x="8.8" y="2.5" width="5.2" height="5.2" rx="1" /><rect x="2" y="8.8" width="5.2" height="5.2" rx="1" /><rect x="8.8" y="8.8" width="5.2" height="5.2" rx="1" /></svg>
             <span class="nono-rich-editor__label">{{ tr('Gallery', '图册') }}</span>
           </button>
@@ -206,7 +206,7 @@ const applyImageProperties = () => {
   closeImageProperties(); refresh();
 };
 const newGalleryItem = () => ({ id: `gallery-${++gallerySequence.value}`, url: '', alt: '', title: '', caption: '' });
-const openGallery = () => { if (!editable.value || !props.enableGallery) return; galleryError.value = ''; galleryPickerId.value = null; galleryItems.value = [newGalleryItem(), newGalleryItem()]; galleryOpen.value = true; };
+const openGallery = () => { if (!editable.value || !props.enableGallery || galleryOpen.value) return; galleryError.value = ''; galleryPickerId.value = null; galleryItems.value = [newGalleryItem(), newGalleryItem()]; galleryOpen.value = true; };
 const closeGallery = () => { if (!galleryUploading.value) { galleryOpen.value = false; galleryPickerId.value = null; galleryError.value = ''; } };
 const setGalleryColumns = (count) => { while (galleryItems.value.length < count) galleryItems.value.push(newGalleryItem()); while (galleryItems.value.length > count) galleryItems.value.pop(); };
 const removeGalleryItem = (index) => { if (galleryItems.value.length <= 2) return; galleryItems.value.splice(index, 1); };

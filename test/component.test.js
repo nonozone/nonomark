@@ -117,6 +117,13 @@ describe('NonoEditor integration', () => {
     expect(wrapper.findAll('figcaption').map(node => node.text())).toEqual(['First image', 'Second image']);
   });
 
+  it('opens the gallery before toolbar blur can cancel the interaction', async () => {
+    const wrapper = await mountEditor({ enableGallery: true });
+    const button = wrapper.find('button[title="Gallery"]');
+    await button.trigger('mousedown');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+  });
+
   it('round trips consecutive Markdown image lines in visual mode', async () => {
     const markdown = '![Workshop](https://example.com/a.jpg)\n![Machine](https://example.com/b.jpg)';
     const wrapper = await mountEditor({ modelValue: markdown });

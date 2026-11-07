@@ -18,6 +18,8 @@ export interface NonoEditorProps {
   importRemoteImages?: ImportRemoteImages | null;
   imageAccept?: string;
   maxImageSize?: number;
+  enableGallery?: boolean;
+  onGalleryPickImage?: (request: { itemId: string; onSelect: (image: Pick<ImageAsset, 'url' | 'alt' | 'title'>) => void }) => void;
   onWarning?: (message: string) => void;
   onUploadComplete?: (images: ImageAsset[]) => void;
   onUploadError?: (error: unknown) => void;

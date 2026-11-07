@@ -63,6 +63,19 @@ describe('React NonoEditor', () => {
     expect(onUploadComplete).toHaveBeenCalledTimes(1);
   });
 
+  it('opens and inserts a gallery through the host picker callback', async () => {
+    const onChange = vi.fn();
+    const onGalleryPickImage = vi.fn(({ onSelect }) => onSelect({ url: 'https://example.com/gallery.jpg', alt: 'Gallery' }));
+    const container = await renderEditor({ onChange, onGalleryPickImage, locale: 'zh-CN' });
+    await act(async () => container.querySelector('button[title="图册"]').dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 })));
+    expect(container.querySelector('[role="dialog"]')).not.toBeNull();
+    await act(async () => container.querySelectorAll('button').forEach((button) => { if (button.textContent === '选择图片') button.click(); }));
+    const insert = Array.from(container.querySelectorAll('button')).find((button) => button.textContent.includes('插入到正文'));
+    await act(async () => insert.click());
+    expect(onGalleryPickImage).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenLastCalledWith(expect.stringContaining('https://example.com/gallery.jpg'));
+  });
+
   it('selects an image by mouse and deletes the selected node', async () => {
     const onChange = vi.fn();
     const container = await renderEditor({ value: 'Before\n\n![photo](https://example.com/photo.jpg)\n\nAfter', onChange });

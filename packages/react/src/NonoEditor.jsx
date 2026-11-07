@@ -8,6 +8,7 @@ import { NodeSelection } from '@tiptap/pm/state';
 import { closeHistory } from '@tiptap/pm/history';
 import { Placeholder } from '@tiptap/extensions';
 import { findRemoteImageReferences, importRemoteImagesFromContent } from '@nonoim/editor-core';
+import { buildGalleryMarkdown } from '../../vue/src/gallery.js';
 
 const DEFAULT_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml';
 const cx = (...values) => values.filter(Boolean).join(' ');
@@ -19,7 +20,8 @@ export function NonoEditor({
   locale = 'en', uploadImages = null, importRemoteImages = null, imageAccept = DEFAULT_IMAGE_ACCEPT,
   maxImageSize = 10 * 1024 * 1024, autoSourceMode = false, onWarning = () => {}, onUploadComplete = () => {},
   onUploadError = () => {}, onUploadCancel = () => {}, onRemoteImageImportStart = () => {},
-  onRemoteImageImportComplete = () => {}, onRemoteImageImportError = () => {}, toolbarEnd = null, footerStatus = null,
+  onRemoteImageImportComplete = () => {}, onRemoteImageImportError = () => {}, enableGallery = true,
+  onGalleryPickImage = () => {}, toolbarEnd = null, footerStatus = null,
 }) {
   const tr = useCallback((en, zh, vars) => {
     let text = /^zh(?:-|$)/i.test(locale) ? (zh || en) : en;
@@ -32,6 +34,14 @@ export function NonoEditor({
   const [focused, setFocused] = useState(false);
   const [revision, setRevision] = useState(0);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [galleryPickerId, setGalleryPickerId] = useState(null);
+  const [galleryError, setGalleryError] = useState('');
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const gallerySequence = useRef(0);
+  const galleryFileInput = useRef(null);
+  const galleryUploadTarget = useRef(null);
   const closeToolbarMore = () => { setToolbarMoreOpen(false); setLinkOpen(false); };
   const [linkDraft, setLinkDraft] = useState('');
   const [imagePropertiesOpen, setImagePropertiesOpen] = useState(false);
@@ -48,8 +58,8 @@ export function NonoEditor({
   const remoteImportController = useRef(null);
   const uploadingFiles = useRef([]);
   const lastPublished = useRef(null);
-  const callbacks = useRef({ onChange, onUploadComplete, onUploadError, onUploadCancel, onRemoteImageImportStart, onRemoteImageImportComplete, onRemoteImageImportError });
-  callbacks.current = { onChange, onUploadComplete, onUploadError, onUploadCancel, onRemoteImageImportStart, onRemoteImageImportComplete, onRemoteImageImportError };
+  const callbacks = useRef({ onChange, onUploadComplete, onUploadError, onUploadCancel, onRemoteImageImportStart, onRemoteImageImportComplete, onRemoteImageImportError, onGalleryPickImage });
+  callbacks.current = { onChange, onUploadComplete, onUploadError, onUploadCancel, onRemoteImageImportStart, onRemoteImageImportComplete, onRemoteImageImportError, onGalleryPickImage };
   const remoteImporter = useRef(importRemoteImages);
   remoteImporter.current = importRemoteImages;
 
@@ -78,6 +88,46 @@ export function NonoEditor({
     const nodes = images.flatMap(({ url, alt, title }) => [{ type: 'image', attrs: { src: url, alt: alt ?? '', title: title ?? null } }, { type: 'paragraph' }]);
     if (nodes.length) editorRef.current?.chain().focus().insertContent(nodes).run();
   }, [insertSourceBlock, sourceMode]);
+
+  const newGalleryItem = () => ({ id: `gallery-${++gallerySequence.current}`, url: '', alt: '', title: '', caption: '' });
+  const openGallery = () => { if (!editable || !enableGallery || galleryOpen) return; setGalleryError(''); setGalleryPickerId(null); setGalleryItems([newGalleryItem(), newGalleryItem()]); setGalleryOpen(true); };
+  const closeGallery = () => { if (!galleryUploading) { setGalleryOpen(false); setGalleryPickerId(null); setGalleryError(''); } };
+  const setGalleryColumns = (count) => setGalleryItems((items) => { const next = items.slice(); while (next.length < count) next.push(newGalleryItem()); while (next.length > count) next.pop(); return next; });
+  const updateGalleryItem = (id, patch) => setGalleryItems((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item));
+  const pickGalleryImage = (itemId) => { setGalleryPickerId(itemId); callbacks.current.onGalleryPickImage({ itemId, onSelect: (asset) => { if (!asset?.url) return; updateGalleryItem(itemId, { url: asset.url, alt: asset.alt ?? '', title: asset.title ?? '' }); setGalleryPickerId(null); setGalleryError(''); } }); };
+  const moveGalleryItem = (index, delta) => setGalleryItems((items) => { const next = index + delta; if (next < 0 || next >= items.length) return items; const values = items.slice(); [values[index], values[next]] = [values[next], values[index]]; return values; });
+  const removeGalleryItem = (index) => setGalleryItems((items) => items.length <= 2 ? items : items.filter((_item, itemIndex) => itemIndex !== index));
+  const openGalleryUpload = (itemId) => { galleryUploadTarget.current = itemId; galleryFileInput.current?.click(); };
+  const handleGalleryUpload = async (event) => {
+    const file = event.target.files?.[0]; event.target.value = '';
+    const target = galleryUploadTarget.current; galleryUploadTarget.current = null;
+    if (!file || !target || !uploadImages) return;
+    const message = (!new Set(imageAccept.split(',').map((item) => item.trim())).has(file.type) && !/\.(png|jpe?g|gif|webp|svg)$/i.test(file.name || ''))
+      ? tr('Unsupported image format.', '不支持该图片格式。') : file.size > maxImageSize ? tr('File exceeds the size limit.', '图片超过大小限制。') : '';
+    if (message) { setGalleryError(message); return; }
+    setGalleryUploading(true); setGalleryError('');
+    try {
+      const result = await uploadImages([file], { signal: new AbortController().signal, onProgress: () => {}, file });
+      const asset = Array.isArray(result) ? result.find((entry) => entry?.url) : null;
+      if (!asset) throw new Error(tr('The upload returned no image URL.', '上传结果中没有可用的图片地址。'));
+      updateGalleryItem(target, { url: asset.url, alt: asset.alt ?? '', title: asset.title ?? '' });
+    } catch (error) { setGalleryError(error?.message || String(error)); } finally { setGalleryUploading(false); }
+  };
+  const insertGallery = () => {
+    if (!editable || galleryItems.length < 2 || galleryItems.length > 4 || galleryItems.some((item) => !item.url)) return;
+    try {
+      const markdown = buildGalleryMarkdown(galleryItems);
+      if (sourceMode) insertSourceBlock(markdown);
+      else {
+        const imageNodes = galleryItems.map(({ url, alt, title, caption }) => editor.schema.nodes.image.create({ src: String(url).trim(), alt: String(alt ?? ''), title: title ?? null, caption: caption || null }));
+        const content = editor.schema.nodes.imageGallery.create(null, imageNodes);
+        editor.view.dispatch(closeHistory(editor.state.tr));
+        if (!editor.commands.insertContentAt(editor.state.selection, content)) throw new Error(tr('The gallery could not be inserted at the current selection.', '图册无法插入当前光标位置。'));
+        editor.commands.focus();
+      }
+      closeGallery();
+    } catch (error) { setGalleryError(error?.message || String(error)); }
+  };
 
   const uploadFiles = useCallback(async (files) => {
     const items = Array.from(files || []);
@@ -242,7 +292,7 @@ export function NonoEditor({
   const minHeight = fill ? '640px' : `${Math.max(420, rows * 32)}px`;
   const characterCount = sourceMode ? sourceValue.length : (editor?.getText()?.length || 0);
 
-  return <div className={cx('nono-rich-editor', fill && 'nono-rich-editor--fill', disabled && 'is-disabled', readOnly && 'is-readonly')} onKeyDown={event => { if (event.key === 'Escape') closeToolbarMore(); }}>
+  return <div className={cx('nono-rich-editor', fill && 'nono-rich-editor--fill', disabled && 'is-disabled', readOnly && 'is-readonly')} onKeyDown={event => { if (event.key === 'Escape') { closeToolbarMore(); closeGallery(); } }}>
     <div className={cx('nono-rich-editor__shell', focused && 'is-focused')}>
       {editor && <div className={cx('nono-rich-editor__toolbar', toolbarMoreOpen && 'is-expanded')} role="toolbar" aria-label={tr('Formatting tools', '格式工具')}>
         <div className="nono-rich-editor__group">
@@ -288,6 +338,10 @@ export function NonoEditor({
             <span className="nono-rich-editor__label">{uploading ? tr('Uploading...', '上传中...') : tr('Upload', '上传')}</span>
             <input type="file" accept={imageAccept} disabled={!editable || uploading} multiple onChange={(event) => { void uploadFiles(event.target.files); event.target.value = ''; }} />
           </label>}
+          {enableGallery && <button type="button" className={cx('nono-rich-editor__button', 'nono-rich-editor__secondary-tool')} disabled={!editable} title={tr('Gallery', '图册')} onMouseDown={(event) => { event.preventDefault(); openGallery(); }} onClick={openGallery}>
+            <svg className="nono-rich-editor__svg-icon nono-rich-editor__gallery-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="5.2" height="5.2" rx="1" /><rect x="8.8" y="2.5" width="5.2" height="5.2" rx="1" /><rect x="2" y="8.8" width="5.2" height="5.2" rx="1" /><rect x="8.8" y="8.8" width="5.2" height="5.2" rx="1" /></svg>
+            <span className="nono-rich-editor__label">{tr('Gallery', '图册')}</span>
+          </button>}
         </div>
         <div className="nono-rich-editor__group">
           <button type="button" className={cx('nono-rich-editor__button', 'nono-rich-editor__source-toggle', 'is-labeled', sourceMode && 'is-active')} disabled={disabled} title={sourceMode ? tr('Switch to visual editor', '切换为可视化编辑') : tr('Switch to Markdown source', '切换为 Markdown 源码')} onClick={toggleSource}>
@@ -315,6 +369,23 @@ export function NonoEditor({
       </div>}
       {editor && <div className="nono-rich-editor__footer"><span>{tr('{count} characters', '{count} 个字符', { count: characterCount })}</span><span className="nono-rich-editor__footer-meta">{footerStatus}<span>{sourceMode ? tr('Markdown source', 'Markdown 源码') : tr('Markdown compatible', '兼容 Markdown')}</span></span></div>}
     </div>{help && <p className="nono-rich-editor__help">{help}</p>}
+    {galleryOpen && <div className="nono-rich-editor__gallery-overlay" onKeyDown={(event) => { if (event.key === 'Escape') closeGallery(); }}>
+      <section role="dialog" aria-modal="true" aria-label={tr('Insert gallery', '插入图册')} className="nono-rich-editor__gallery-dialog">
+        <h2>{tr('Insert gallery', '插入图册')}</h2>
+        <fieldset><legend>{tr('Images', '图片数量')}</legend>{[2, 3, 4].map((count) => <label key={count}><input type="radio" name="nono-gallery-columns" value={count} checked={galleryItems.length === count} onChange={() => setGalleryColumns(count)} />{tr('{count} images', '{count} 张图片', { count })}</label>)}</fieldset>
+        <p className="nono-rich-editor__gallery-layout-hint">{tr('{count} images will appear in one row in the article on desktop; phones use a single column. The picker cards below are only for choosing images.', '{count} 张图片将在桌面正文中并排一行显示；手机单列显示。下方选择卡片的布局不代表正文排版。', { count: galleryItems.length })}</p>
+        <div className="nono-rich-editor__gallery-items">{galleryItems.map((item, index) => <div key={item.id} className="nono-rich-editor__gallery-item">
+          <div className="nono-rich-editor__gallery-preview">{item.url ? <img src={item.url} alt={item.alt} /> : <span>{tr('No image selected', '尚未选择图片')}</span>}</div>
+          <div className="nono-rich-editor__gallery-item-actions"><button type="button" onClick={() => pickGalleryImage(item.id)}>{tr('Choose image', '选择图片')}</button>{uploadImages && <button type="button" disabled={galleryUploading} onClick={() => openGalleryUpload(item.id)}>{tr('Upload image', '上传图片')}</button>}<button type="button" disabled={index === 0} aria-label={tr('Move left', '左移')} onClick={() => moveGalleryItem(index, -1)}>←</button><button type="button" disabled={index === galleryItems.length - 1} aria-label={tr('Move right', '右移')} onClick={() => moveGalleryItem(index, 1)}>→</button><button type="button" disabled={galleryItems.length <= 2} aria-label={tr('Remove image', '删除图片')} onClick={() => removeGalleryItem(index)}>×</button></div>
+          <input value={item.caption} aria-label={tr('Caption for image {count}', '第 {count} 张图的图片说明（可选）', { count: index + 1 })} placeholder={tr('Image caption (optional)', '图片说明（可选）')} onChange={(event) => updateGalleryItem(item.id, { caption: event.target.value })} />
+          <input value={item.alt} aria-label={tr('Alternative text for image {count}', '第 {count} 张图的锚文本 alt', { count: index + 1 })} placeholder={tr('Alternative text (alt)', '锚文本 alt')} onChange={(event) => updateGalleryItem(item.id, { alt: event.target.value })} />
+        </div>)}</div>
+        <input ref={galleryFileInput} className="nono-rich-editor__gallery-file" type="file" accept={imageAccept} onChange={handleGalleryUpload} />
+        {galleryPickerId && <div className="nono-rich-editor__gallery-picker"><p>{tr('Choose an image from your media library.', '请从媒体库选择图片。')}</p></div>}
+        {galleryError && <p role="alert" className="nono-rich-editor__gallery-error">{galleryError}</p>}
+        <div className="nono-rich-editor__gallery-footer"><button type="button" onClick={closeGallery}>{tr('Cancel', '取消')}</button><button type="button" disabled={galleryItems.length < 2 || galleryItems.length > 4 || galleryItems.some((item) => !item.url) || galleryUploading} onClick={insertGallery}>{tr('Insert into document', '插入到正文')}</button></div>
+      </section>
+    </div>}
   </div>;
 }
 

@@ -2,6 +2,13 @@
 
 All notable changes to this package are documented here. The project follows semantic versioning once a release is published.
 
+## 0.6.11 - 2026-11-07
+
+- Prevent toolbar blur from cancelling gallery dialog opening with `@mousedown.prevent`.
+- Elevate gallery overlay `z-index` to 1000 with `isolation: isolate` to avoid modal/drawer stacking issues.
+- Support gallery picker integration in the React adapter.
+- Bundle interaction styles in `@nonoim/editor-js`.
+
 ## 0.6.10 - 2026-11-07
 
 - Replace plain text toolbar symbols with consistent 16x16 vector SVG icons (undo, redo, table, lists, quote, code, link, image upload, gallery).

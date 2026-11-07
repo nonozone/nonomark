@@ -24,3 +24,5 @@ The fallback is an editable controlled textarea. Call `preloadNonoEditor()` on r
 In visual mode, select an image and click **Image properties** beside it. Alternative text (`alt`) and the optional visible caption are separate fields. Empty alt stays empty. **Use caption as alt** explicitly copies the caption when desired; typing a caption alone preserves alt. Apply affects only the selected occurrence; cancel, Escape, undo and redo are supported.
 
 Uncaptioned images use standard Markdown; captioned images use portable HTML `<figure>`, `<img>`, and `<figcaption>` elements. The editor preserves alt, caption, URL and title through save/reopen and source/visual switching. Configure the article renderer to allow these HTML elements. Article edits do not update the host's image library.
+
+Set `enableGallery={true}` (the default) to show the **Gallery** toolbar action. Provide `onGalleryPickImage={({ itemId, onSelect }) => ...}` to connect each gallery slot to your media library; call `onSelect({ url, alt, title })` after the user chooses an asset. The existing `uploadImages` callback also enables per-slot uploads.
