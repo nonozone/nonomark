@@ -26,11 +26,6 @@ jobs:
       - name: Publish workspace packages
         run: |
           for pkg in "@nonoim/editor-core" "@nonoim/editor-vue" "@nonoim/editor-react" "@nonoim/editor"; do
-            echo "Checking $pkg..."
-            if npm view "$pkg@0.6.10" version 2>/dev/null | grep -q "0.6.10"; then
-              echo "$pkg@0.6.10 is already published, skipping."
-            else
-              echo "Publishing $pkg..."
-              npm publish --workspace "$pkg" --access public --provenance
-            fi
+            echo "Publishing $pkg..."
+            npm publish --workspace "$pkg" --access public --provenance || true
           done
